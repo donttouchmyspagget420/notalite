@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NotaLite · Mockups individuales</title>
-<style>
 
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NotaLite · Mockups individuales</title>
+  <style>
     :root {
       --bg: #0c0d10;
       --panel: #121418;
@@ -945,106 +945,144 @@
     .avatar.a5 {
       background: #ec4899
     }
-  
-  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:14px}
-  .cardm{border:1px solid var(--border); border-radius:12px; background:var(--panel);
-         padding:16px 18px; display:flex; flex-direction:column; gap:6px; text-decoration:none; color:var(--txt)}
-  .cardm:hover{border-color:var(--accent)}
-  .cardm .bd{font-family:var(--mono); font-size:11px; color:var(--accent-hi); font-weight:600}
-  .cardm .tt{font-weight:700; font-size:14px}
-  .cardm .dc{color:var(--dim); font-size:12px}
-</style>
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 14px
+    }
+
+    .cardm {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--panel);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-decoration: none;
+      color: var(--txt)
+    }
+
+    .cardm:hover {
+      border-color: var(--accent)
+    }
+
+    .cardm .bd {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent-hi);
+      font-weight: 600
+    }
+
+    .cardm .tt {
+      font-weight: 700;
+      font-size: 14px
+    }
+
+    .cardm .dc {
+      color: var(--dim);
+      font-size: 12px
+    }
+  </style>
 </head>
+
 <body>
-<header class="topbar">
-  <a class="brand" href="../04-mockups.html" style="text-decoration:none"><span class="mark"></span>NotaLite <span>· Mockups</span></a>
-  <span class="spacer"></span>
-  <a class="pill nav" href="../04-mockups.html">← Galería completa</a>
-</header>
-<main>
-  <h1 class="doc">Mockups individuales</h1>
-  <p class="lede">Un archivo HTML por caso de uso. Cada archivo <b>es</b> la interfaz: la pantalla ocupa
-  todo el viewport (tema oscuro, minimal/flat) y la barra superior permite navegar entre mockups.</p>
-  <div class="grid">
-    <a class="cardm" href="uc-01a-landing-acceso-publico.html">
-      <div class="bd">UC-01a</div>
-      <div class="tt">Landing — acceso público</div>
-      <div class="dc">Punto de entrada sin cuenta: propuesta de valor y accesos a «Iniciar sesión» y «Registrarse».</div>
-    </a>
-    <a class="cardm" href="uc-01b-iniciar-sesion.html">
-      <div class="bd">UC-01b</div>
-      <div class="tt">Iniciar sesión</div>
-      <div class="dc">Acceso con email y contraseña (hash bcrypt). La sesión expira a los 30 días.</div>
-    </a>
-    <a class="cardm" href="uc-01c-registrarse.html">
-      <div class="bd">UC-01c</div>
-      <div class="tt">Registrarse</div>
-      <div class="dc">Alta de cuenta por email y contraseña. La contraseña se almacena con hash (bcrypt).</div>
-    </a>
-    <a class="cardm" href="uc-02-crear-nota.html">
-      <div class="bd">UC-02</div>
-      <div class="tt">Crear nota</div>
-      <div class="dc">Lista de notas con creación instantánea desde «Nueva nota» (nota en blanco o plantilla).</div>
-    </a>
-    <a class="cardm" href="uc-03-editar-nota-editor-markdown.html">
-      <div class="bd">UC-03</div>
-      <div class="tt">Editar nota · editor Markdown</div>
-      <div class="dc">Editor con vista previa en vivo, autoguardado a los 2 s («Guardado») e inclusión del flujo Markdown (include → Markdown).</div>
-    </a>
-    <a class="cardm" href="uc-04-gestionar-carpetas.html">
-      <div class="bd">UC-04</div>
-      <div class="tt">Gestionar carpetas</div>
-      <div class="dc">Carpetas anidadas, crear/renombrar/eliminar desde el menú contextual, y mover notas entre carpetas.</div>
-    </a>
-    <a class="cardm" href="uc-05-gestionar-etiquetas.html">
-      <div class="bd">UC-05</div>
-      <div class="tt">Gestionar etiquetas</div>
-      <div class="dc">Crear/eliminar etiquetas y asignarlas o quitarlas de las notas.</div>
-    </a>
-    <a class="cardm" href="uc-06-buscar-full-text.html">
-      <div class="bd">UC-06</div>
-      <div class="tt">Buscar (full-text)</div>
-      <div class="dc">Búsqueda sobre título, contenido y etiquetas con resaltado de coincidencias (&lt;300 ms · 10.000 notas).</div>
-    </a>
-    <a class="cardm" href="uc-07-compartir-por-link.html">
-      <div class="bd">UC-07</div>
-      <div class="tt">Compartir por link</div>
-      <div class="dc">Generar link público de solo lectura, opcionalmente protegido por contraseña.</div>
-    </a>
-    <a class="cardm" href="uc-07b-ingresar-por-link-invitado.html">
-      <div class="bd">UC-07b</div>
-      <div class="tt">Ingresar por link (invitado)</div>
-      <div class="dc">Un invitado abre el link público y entra al lugar de trabajo en modo solo lectura.</div>
-    </a>
-    <a class="cardm" href="uc-09-papelera-restaurar.html">
-      <div class="bd">UC-09</div>
-      <div class="tt">Papelera / restaurar</div>
-      <div class="dc">Notas eliminadas permanecen 30 días; se pueden restaurar o vaciar la papelera manualmente.</div>
-    </a>
-    <a class="cardm" href="uc-10-configurar-cuenta.html">
-      <div class="bd">UC-10</div>
-      <div class="tt">Configurar cuenta</div>
-      <div class="dc">Editar perfil (nombre, avatar), cambiar contraseña y preferencias de tema.</div>
-    </a>
-    <a class="cardm" href="uc-12-importar-exportar.html">
-      <div class="bd">UC-12</div>
-      <div class="tt">Importar / Exportar</div>
-      <div class="dc">Exportar nota a Markdown o PDF e importar archivos .md como notas nuevas.</div>
-    </a>
-    <a class="cardm" href="uc-13-gestionar-adjuntos.html">
-      <div class="bd">UC-13</div>
-      <div class="tt">Gestionar adjuntos</div>
-      <div class="dc">Subir imágenes/archivos (máx. 25 MB) sujeto al límite del plan (5/50 GB).</div>
-    </a>
-    <a class="cardm" href="uc-14-admin-ver-usuarios-y-metricas.html">
-      <div class="bd">UC-14</div>
-      <div class="tt">Admin · ver usuarios y métricas</div>
-      <div class="dc">Listar usuarios, ver métricas de uso y gestionar cuentas (uso interno).</div>
-    </a>
-  </div>
-  <p style="color:var(--dim); font-size:12px; margin-top:24px">
-    Abre cualquiera: la app se verá a pantalla completa, sin marco de navegador.
-  </p>
-</main>
+  <header class="topbar">
+    <a class="brand" href="../04-mockups.html" style="text-decoration:none"><span class="mark"></span>NotaLite <span>·
+        Mockups</span></a>
+    <span class="spacer"></span>
+    <a class="pill nav" href="../04-mockups.html">← Galería completa</a>
+  </header>
+  <main>
+    <h1 class="doc">Mockups individuales</h1>
+    <p class="lede">Un archivo HTML por caso de uso. Cada archivo <b>es</b> la interfaz: la pantalla ocupa
+      todo el viewport (tema oscuro, minimal/flat) y la barra superior permite navegar entre mockups.</p>
+    <div class="grid">
+      <a class="cardm" href="uc-01a-landing-acceso-publico.html">
+        <div class="bd">UC-01a</div>
+        <div class="tt">Landing — acceso público</div>
+        <div class="dc">Punto de entrada sin cuenta: propuesta de valor y accesos a «Iniciar sesión» y «Registrarse».
+        </div>
+      </a>
+      <a class="cardm" href="uc-01b-iniciar-sesion.html">
+        <div class="bd">UC-01b</div>
+        <div class="tt">Iniciar sesión</div>
+        <div class="dc">Acceso con email y contraseña (hash bcrypt). La sesión expira a los 30 días.</div>
+      </a>
+      <a class="cardm" href="uc-01c-registrarse.html">
+        <div class="bd">UC-01c</div>
+        <div class="tt">Registrarse</div>
+        <div class="dc">Alta de cuenta por email y contraseña. La contraseña se almacena con hash (bcrypt).</div>
+      </a>
+      <a class="cardm" href="uc-02-crear-nota.html">
+        <div class="bd">UC-02</div>
+        <div class="tt">Crear nota</div>
+        <div class="dc">Lista de notas con creación instantánea desde «Nueva nota» (nota en blanco o plantilla).</div>
+      </a>
+      <a class="cardm" href="uc-03-editar-nota-editor-markdown.html">
+        <div class="bd">UC-03</div>
+        <div class="tt">Editar nota · editor Markdown</div>
+        <div class="dc">Editor con vista previa en vivo, autoguardado a los 2 s («Guardado») e inclusión del flujo
+          Markdown (include → Markdown).</div>
+      </a>
+      <a class="cardm" href="uc-04-gestionar-carpetas.html">
+        <div class="bd">UC-04</div>
+        <div class="tt">Gestionar carpetas</div>
+        <div class="dc">Carpetas anidadas, crear/renombrar/eliminar desde el menú contextual, y mover notas entre
+          carpetas.</div>
+      </a>
+      <a class="cardm" href="uc-05-gestionar-etiquetas.html">
+        <div class="bd">UC-05</div>
+        <div class="tt">Gestionar etiquetas</div>
+        <div class="dc">Crear/eliminar etiquetas y asignarlas o quitarlas de las notas.</div>
+      </a>
+      <a class="cardm" href="uc-06-buscar-full-text.html">
+        <div class="bd">UC-06</div>
+        <div class="tt">Buscar (full-text)</div>
+        <div class="dc">Búsqueda sobre título, contenido y etiquetas con resaltado de coincidencias (&lt;300 ms · 10.000
+          notas).</div>
+      </a>
+      <a class="cardm" href="uc-07-compartir-por-link.html">
+        <div class="bd">UC-07</div>
+        <div class="tt">Compartir por link</div>
+        <div class="dc">Generar link público de solo lectura, opcionalmente protegido por contraseña.</div>
+      </a>
+      <a class="cardm" href="uc-07b-ingresar-por-link-invitado.html">
+        <div class="bd">UC-07b</div>
+        <div class="tt">Ingresar por link (invitado)</div>
+        <div class="dc">Un invitado abre el link público y entra al lugar de trabajo en modo solo lectura.</div>
+      </a>
+      <a class="cardm" href="uc-09-papelera-restaurar.html">
+        <div class="bd">UC-09</div>
+        <div class="tt">Papelera / restaurar</div>
+        <div class="dc">Notas eliminadas permanecen 30 días; se pueden restaurar o vaciar la papelera manualmente.</div>
+      </a>
+      <a class="cardm" href="uc-10-configurar-cuenta.html">
+        <div class="bd">UC-10</div>
+        <div class="tt">Configurar cuenta</div>
+        <div class="dc">Editar perfil (nombre, avatar), cambiar contraseña y preferencias de tema.</div>
+      </a>
+      <a class="cardm" href="uc-12-importar-exportar.html">
+        <div class="bd">UC-12</div>
+        <div class="tt">Importar / Exportar</div>
+        <div class="dc">Exportar nota a Markdown o PDF e importar archivos .md como notas nuevas.</div>
+      </a>
+      <a class="cardm" href="uc-13-gestionar-adjuntos.html">
+        <div class="bd">UC-13</div>
+        <div class="tt">Gestionar adjuntos</div>
+        <div class="dc">Subir imágenes/archivos (máx. 25 MB) sujeto al límite del plan (5/50 GB).</div>
+      </a>
+      <a class="cardm" href="uc-14-admin-ver-usuarios-y-metricas.html">
+        <div class="bd">UC-14</div>
+        <div class="tt">Admin · ver usuarios y métricas</div>
+        <div class="dc">Listar usuarios, ver métricas de uso y gestionar cuentas (uso interno).</div>
+      </a>
+    </div>
+    <p style="color:var(--dim); font-size:12px; margin-top:24px">
+      Abre cualquiera: la app se verá a pantalla completa, sin marco de navegador.
+    </p>
+  </main>
 </body>
+
 </html>

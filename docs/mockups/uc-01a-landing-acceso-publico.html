@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NotaLite · UC-01a Landing — acceso público</title>
-<style>
 
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NotaLite · UC-01a Landing — acceso público</title>
+  <style>
     :root {
       --bg: #0c0d10;
       --panel: #121418;
@@ -945,85 +945,138 @@
     .avatar.a5 {
       background: #ec4899
     }
-  
 
-  /* ---------- standalone: the mockup IS the page ---------- */
-  body{background:var(--bg); color:var(--txt)}
-  .mbar{position:sticky; top:0; z-index:100; display:flex; align-items:center; gap:8px;
-        padding:9px 18px; background:rgba(12,13,16,.94); border-bottom:1px solid var(--border)}
-  .mbar .mbtitle{font-weight:700; font-size:13.5px}
-  .mbar .mbdesc{color:var(--dim); font-size:11.5px; max-width:520px; white-space:nowrap;
-                overflow:hidden; text-overflow:ellipsis}
-  .mbar a{color:var(--sub); text-decoration:none; font-size:11.5px; padding:4px 9px;
-          border:1px solid var(--border-2); border-radius:7px; white-space:nowrap}
-  .mbar a:hover{color:var(--txt); border-color:var(--accent)}
-  @media (max-width:760px){ .mbar .mbdesc{display:none} }
-  .mockapp{min-height:calc(100vh - 55px); background:var(--bg); color:var(--txt)}
-  .mockapp .content{overflow:auto}
-  .mockapp .aside{min-height:inherit}
 
-</style>
+    /* ---------- standalone: the mockup IS the page ---------- */
+    body {
+      background: var(--bg);
+      color: var(--txt)
+    }
+
+    .mbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      background: rgba(12, 13, 16, .94);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .mbar .mbtitle {
+      font-weight: 700;
+      font-size: 13.5px
+    }
+
+    .mbar .mbdesc {
+      color: var(--dim);
+      font-size: 11.5px;
+      max-width: 520px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .mbar a {
+      color: var(--sub);
+      text-decoration: none;
+      font-size: 11.5px;
+      padding: 4px 9px;
+      border: 1px solid var(--border-2);
+      border-radius: 7px;
+      white-space: nowrap
+    }
+
+    .mbar a:hover {
+      color: var(--txt);
+      border-color: var(--accent)
+    }
+
+    @media (max-width:760px) {
+      .mbar .mbdesc {
+        display: none
+      }
+    }
+
+    .mockapp {
+      min-height: calc(100vh - 55px);
+      background: var(--bg);
+      color: var(--txt)
+    }
+
+    .mockapp .content {
+      overflow: auto
+    }
+
+    .mockapp .aside {
+      min-height: inherit
+    }
+  </style>
 </head>
+
 <body>
-<div class="mbar">
-  <span class="mbtitle"><span style="color:var(--accent-hi)">UC-01a</span> Landing — acceso público</span>
-  <span class="mbdesc" title="Punto de entrada sin cuenta: propuesta de valor y accesos a «Iniciar sesión» y «Registrarse».">Punto de entrada sin cuenta: propuesta de valor y accesos a «Iniciar sesión» y «Registrarse».</span>
-  <span style="flex:1"></span>
-<a href="index.html">Índice</a>
+  <div class="mbar">
+    <span class="mbtitle"><span style="color:var(--accent-hi)">UC-01a</span> Landing — acceso público</span>
+    <span class="mbdesc"
+      title="Punto de entrada sin cuenta: propuesta de valor y accesos a «Iniciar sesión» y «Registrarse».">Punto de
+      entrada sin cuenta: propuesta de valor y accesos a «Iniciar sesión» y «Registrarse».</span>
+    <span style="flex:1"></span>
+    <a href="index.html">Índice</a>
     <a href="uc-01b-iniciar-sesion.html">UC-01b ›</a>
     <a href="../04-mockups.html">Galería</a>
-</div>
-<div class="mockapp">
+  </div>
+  <div class="mockapp">
 
-            <div style="display:flex; flex-direction:column; min-height:100vh">
-              <div
-                style="display:flex; align-items:center; gap:10px; padding:14px 26px; border-bottom:1px solid var(--border)">
-                <div class="brand"><span class="mark"></span>NotaLite</div>
-                <div style="flex:1"></div>
-                <span style="color:var(--sub); font-size:12.5px">Iniciar sesión</span>
-                <span class="btn primary">Crear cuenta gratis</span>
-              </div>
-              <div
-                style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:36px 30px 20px">
-                <div
-                  style="font-size:11px; color:var(--accent-hi); font-weight:700; letter-spacing:.14em; text-transform:uppercase">
-                  NotaLite</div>
-                <h1 style="font-size:34px; letter-spacing:-.02em; font-weight:800; margin:10px 0 8px">Notas
-                  rápidas.<br>Sin fricción.</h1>
-                <p style="color:var(--sub); max-width:420px; font-size:14px">Crea, organiza y comparte notas con
-                  Markdown, carpetas, etiquetas y wiki-links. Al estilo Notion y Obsidian, pero simple.</p>
-                <div style="display:flex; gap:10px; margin-top:22px">
-                  <span class="btn primary">Crear cuenta gratis</span>
-                  <span class="btn">Ver demo</span>
-                </div>
-                <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:26px">
-                  <span class="chip">Markdown en vivo</span>
-                  <span class="chip">Carpetas y etiquetas</span>
-                  <span class="chip">Wiki-links</span>
-                  <span class="chip">Compartir por link</span>
-                </div>
-              </div>
-              <div
-                style="display:grid; grid-template-columns:repeat(4,1fr); gap:1px; border-top:1px solid var(--border)">
-                <div style="background:var(--panel); padding:14px 16px">
-                  <b style="font-size:12.5px">Editor Markdown</b>
-                  <div style="font-size:11px; color:var(--dim); margin-top:3px">Vista previa en vivo y autoguardado.
-                  </div>
-                </div>
-                <div style="background:var(--panel); padding:14px 16px">
-                  <b style="font-size:12.5px">Organización</b>
-                  <div style="font-size:11px; color:var(--dim); margin-top:3px">Carpetas anidadas y etiquetas.</div>
-                </div>
-                <div style="background:var(--panel); padding:14px 16px">
-                  <b style="font-size:12.5px">Wiki-links</b>
-                  <div style="font-size:11px; color:var(--dim); margin-top:3px">[[Nombre]] crea y enlaza notas.</div>
-                </div>
-                <div style="background:var(--panel); padding:14px 16px">
-                  <b style="font-size:12.5px">Privacidad</b>
-                  <div style="font-size:11px; color:var(--dim); margin-top:3px">Notas privadas por defecto.</div>
-                </div>
-              </div>
-            </div>
-</div>
+    <div style="display:flex; flex-direction:column; min-height:100vh">
+      <div style="display:flex; align-items:center; gap:10px; padding:14px 26px; border-bottom:1px solid var(--border)">
+        <div class="brand"><span class="mark"></span>NotaLite</div>
+        <div style="flex:1"></div>
+        <span style="color:var(--sub); font-size:12.5px">Iniciar sesión</span>
+        <span class="btn primary">Crear cuenta gratis</span>
+      </div>
+      <div
+        style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:36px 30px 20px">
+        <div
+          style="font-size:11px; color:var(--accent-hi); font-weight:700; letter-spacing:.14em; text-transform:uppercase">
+          NotaLite</div>
+        <h1 style="font-size:34px; letter-spacing:-.02em; font-weight:800; margin:10px 0 8px">Notas
+          rápidas.<br>Sin fricción.</h1>
+        <p style="color:var(--sub); max-width:420px; font-size:14px">Crea, organiza y comparte notas con
+          Markdown, carpetas, etiquetas y wiki-links. Al estilo Notion y Obsidian, pero simple.</p>
+        <div style="display:flex; gap:10px; margin-top:22px">
+          <span class="btn primary">Crear cuenta gratis</span>
+          <span class="btn">Ver demo</span>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:26px">
+          <span class="chip">Markdown en vivo</span>
+          <span class="chip">Carpetas y etiquetas</span>
+          <span class="chip">Wiki-links</span>
+          <span class="chip">Compartir por link</span>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:1px; border-top:1px solid var(--border)">
+        <div style="background:var(--panel); padding:14px 16px">
+          <b style="font-size:12.5px">Editor Markdown</b>
+          <div style="font-size:11px; color:var(--dim); margin-top:3px">Vista previa en vivo y autoguardado.
+          </div>
+        </div>
+        <div style="background:var(--panel); padding:14px 16px">
+          <b style="font-size:12.5px">Organización</b>
+          <div style="font-size:11px; color:var(--dim); margin-top:3px">Carpetas anidadas y etiquetas.</div>
+        </div>
+        <div style="background:var(--panel); padding:14px 16px">
+          <b style="font-size:12.5px">Wiki-links</b>
+          <div style="font-size:11px; color:var(--dim); margin-top:3px">[[Nombre]] crea y enlaza notas.</div>
+        </div>
+        <div style="background:var(--panel); padding:14px 16px">
+          <b style="font-size:12.5px">Privacidad</b>
+          <div style="font-size:11px; color:var(--dim); margin-top:3px">Notas privadas por defecto.</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
+
 </html>
