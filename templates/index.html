@@ -3,5 +3,31 @@
 {% block title %}NotaLite - Home{% endblock %}
 
 {% block content %}
-<div>Hi</div>
+<div class="d-flex flex-column justify-content-center align-items-center text-center" style="min-height: 85vh;">
+<p class="hi">NOTALITE</p>
+<h1>
+    <b>
+    Notas rápidas.
+    <br>
+    Sin fricción.
+    </b>
+</h1>
+  <p class="p-landing">
+Crea, organiza y comparte notas con Markdown, carpetas,
+  <br>etiquetas y wiki-links. Al estilo Notion y Obsidian, pero simple.
+  </p>
+
+    <div class="btn-group" role="group">
+      <a href="{{ url_for('login') }}" class="btn btn-main">Crear cuenta gratis</a>
+      <a href="{{ url_for('signup') }}" class="btn text-secondary">Iniciar sesión</a>
+    </div>
+
+
+<div class="d-flex mt-3 justify-content-center flex-wrap" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:26px">
+          <span class="d-inline-flex chip">Markdown en vivo</span>
+          <span class="d-inline-flex chip">Carpetas y etiquetas</span>
+          <span class="d-inline-flex chip">Wiki-links</span>
+          <span class="d-inline-flex chip">Compartir por link</span>
+        </div>
+</div>
 {% endblock %}
