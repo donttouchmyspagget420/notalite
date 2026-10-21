@@ -14,40 +14,40 @@ NotaLite es una aplicación web de notas con Markdown, carpetas, etiquetas, y no
 
 #### linux/macos
 
->$ mkdir myproject
->$ cd myproject
->$ python3 -m venv .venv
+`$ mkdir myproject`
+`$ cd myproject`
+`$ python3 -m venv .venv`
 
->$ source .venv/bin/activate #depiende de shell(bash,fish,zsh)
+`$ source .venv/bin/activate #depiende de shell(bash,fish,zsh)`
 
 #### windows
 
->> mkdir myproject
->> cd myproject
->> py -3 -m venv .ven
+`\> mkdir myproject`
+`\> cd myproject`
+`\> py -3 -m venv .venv`
 
->> .venv\Scripts\activate
+`\> .venv\Scripts\activate`
 
 ### Instalar las dependencias
 
-> pip install -r requirements.txt
+`pip install -r requirements.txt`
 
 ### Copia dotenv ejemplo y modifica
 
-> cp .env.example .env
+`cp .env.example .env`
 
 ### Prepara base de datos(solo sqlite)
 
-> python migrate.py init
-> python migrate.py seed
+`python migrate.py init`
+`python migrate.py seed`
 
 ### Lanza la app
 
-> python app.py
+`python app.py`
 
 ## Herramientos
 
-> python migrate.py init //crear la base de datos
-> python migrate.py seed //llenarlo
-> python migrate.py clear //limpiarlo
-> python migrate.py check //ver todos las tablas
+`python migrate.py init //crear la base de datos`
+`python migrate.py seed //llenarlo`
+`python migrate.py clear //limpiarlo`
+`python migrate.py check //ver todos las tablas`
