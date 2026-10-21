@@ -1,9 +1,18 @@
+import os
 import sys
 from sqlalchemy import create_engine,inspect,text
 from models import db
 from seed import seed_database
+from dotenv import load_dotenv
 
-engine = create_engine("sqlite:///instance/database.db")
+load_dotenv()
+
+DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI")
+
+if not DATABASE_URI:
+    raise ValueError("DATABASE_URL environment variable is not set")
+
+engine = create_engine(DATABASE_URI)
 
 def seed():
     seed_database()
@@ -56,7 +65,7 @@ def check():
 
 
 def main():
-    if len(sys.argv) <= 0:
+    if len(sys.argv) <= 1:
         sys.exit("no bastante argumentos")
 
     command = sys.argv[1]

@@ -1,4 +1,5 @@
 from datetime import timezone
+import os
 import random
 from faker import Faker
 from sqlalchemy import create_engine
@@ -6,8 +7,10 @@ from sqlalchemy.orm import sessionmaker
 from flask_bcrypt import generate_password_hash
 from models import db, Role, User, Directory, Note, Collab, Tag
 
-# Update with your actual database connection URI
-DATABASE_URI = "sqlite:///instance/database.db"  # e.g., "postgresql://user:pass@localhost:5432/dbname"
+DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI")
+
+if not DATABASE_URI:
+    raise ValueError("DATABASE_URL environment variable is not set")
 
 engine = create_engine(DATABASE_URI)
 Session = sessionmaker(bind=engine)
