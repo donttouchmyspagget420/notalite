@@ -15,7 +15,9 @@ NotaLite es una aplicación web de notas con Markdown, carpetas, etiquetas, y no
 #### linux/macos
 
 `$ mkdir myproject`
+
 `$ cd myproject`
+
 `$ python3 -m venv .venv`
 
 `$ source .venv/bin/activate #depiende de shell(bash,fish,zsh)`
@@ -23,7 +25,9 @@ NotaLite es una aplicación web de notas con Markdown, carpetas, etiquetas, y no
 #### windows
 
 `> mkdir myproject`
+
 `> cd myproject`
+
 `> py -3 -m venv .venv`
 
 `> .venv\Scripts\activate`
@@ -39,6 +43,7 @@ NotaLite es una aplicación web de notas con Markdown, carpetas, etiquetas, y no
 ### Prepara base de datos(solo sqlite)
 
 `python migrate.py init`
+
 `python migrate.py seed`
 
 ### Lanza la app
@@ -48,6 +53,9 @@ NotaLite es una aplicación web de notas con Markdown, carpetas, etiquetas, y no
 ## Herramientos
 
 `python migrate.py init //crear la base de datos`
+
 `python migrate.py seed //llenarlo`
+
 `python migrate.py clear //limpiarlo`
+
 `python migrate.py check //ver todos las tablas`
