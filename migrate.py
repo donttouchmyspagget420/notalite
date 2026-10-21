@@ -1,8 +1,12 @@
 import sys
 from sqlalchemy import create_engine,inspect,text
 from models import db
+from seed import seed_database
 
 engine = create_engine("sqlite:///instance/database.db")
+
+def seed():
+    seed_database()
 
 def init():
     db.metadata.create_all(bind=engine)
@@ -22,34 +26,50 @@ def check():
 
     with engine.connect() as conn:
         for table_name in table_names:
-            print(f"\n================ TABLE: {table_name} ================")
-            
-            # Execute direct raw SELECT
-            result = conn.execute(text(f"SELECT * FROM {table_name}"))
-            
-            # Get column names directly from SQL cursor metadata
-            columns = result.keys()
-            print(f"COLUMNS: {list(columns)}")
-            print("-" * 50)
+                print(f"\n================ TABLE: {table_name} ================")
+                
+                result = conn.execute(text(f"SELECT * FROM {table_name}"))
+                rows = result.fetchall()
+                
+                if not rows:
+                    print("(0 rows)")
+                    continue
+                    
+                columns = list(result.keys())
+                data = [[str(val) if val is not None else "NULL" for val in row] for row in rows]
+                
+                # Calculate maximum width for each column (accounting for header lengths)
+                col_widths = [
+                    max(len(col), max(len(row[i]) for row in data))
+                    for i, col in enumerate(columns)
+                ]
+                
+                # Build layout formats
+                header_str = " | ".join(f"{col:<{col_widths[i]}}" for i, col in enumerate(columns))
+                divider = "-+-".join("-" * w for w in col_widths)
+                
+                # Print table
+                print(header_str)
+                print(divider)
+                for row in data:
+                    print(" | ".join(f"{val:<{col_widths[i]}}" for i, val in enumerate(row)))
 
-            rows = result.fetchall()
-            if not rows:
-                print("(0 rows)")
-                continue
 
-            for row in rows:
-                # row._mapping displays column_name: value pairs like a database shell output
-                print(dict(row._mapping))
+def main():
+    if len(sys.argv) <= 0:
+        sys.exit("no bastante argumentos")
 
-if len(sys.argv) <= 0:
-    sys.exit("no bastante argumentos")
+    command = sys.argv[1]
 
-command = sys.argv[1]
+    match command:
+        case "init":
+            init()
+        case "clear":
+            clear()
+        case "check":
+            check()
+        case "seed":
+            seed()
 
-match command:
-    case "init":
-        init()
-    case "clear":
-        clear()
-    case "check":
-        check()
+if __name__ == '__main__':
+    main()
