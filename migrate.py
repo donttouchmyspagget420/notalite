@@ -1,16 +1,17 @@
 import os
 import sys
-from sqlalchemy import create_engine,inspect,text
-from models import db
-from seed import seed_database
 from dotenv import load_dotenv
 
 load_dotenv()
 
+from sqlalchemy import create_engine,inspect,text
+from models import db
+from seed import seed_database
+
 DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI")
 
 if not DATABASE_URI:
-    raise ValueError("DATABASE_URL environment variable is not set")
+    raise ValueError("SQLALCHEMY_DATABASE_URI environment variable is not set")
 
 engine = create_engine(DATABASE_URI)
 

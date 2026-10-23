@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NotaLite · UC-01c Registrarse</title>
-<style>
 
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NotaLite · UC-01c Registrarse</title>
+  <style>
     :root {
       --bg: #0c0d10;
       --panel: #121418;
@@ -945,66 +945,120 @@
     .avatar.a5 {
       background: #ec4899
     }
-  
 
-  /* ---------- standalone: the mockup IS the page ---------- */
-  body{background:var(--bg); color:var(--txt)}
-  .mbar{position:sticky; top:0; z-index:100; display:flex; align-items:center; gap:8px;
-        padding:9px 18px; background:rgba(12,13,16,.94); border-bottom:1px solid var(--border)}
-  .mbar .mbtitle{font-weight:700; font-size:13.5px}
-  .mbar .mbdesc{color:var(--dim); font-size:11.5px; max-width:520px; white-space:nowrap;
-                overflow:hidden; text-overflow:ellipsis}
-  .mbar a{color:var(--sub); text-decoration:none; font-size:11.5px; padding:4px 9px;
-          border:1px solid var(--border-2); border-radius:7px; white-space:nowrap}
-  .mbar a:hover{color:var(--txt); border-color:var(--accent)}
-  @media (max-width:760px){ .mbar .mbdesc{display:none} }
-  .mockapp{min-height:calc(100vh - 55px); background:var(--bg); color:var(--txt)}
-  .mockapp .content{overflow:auto}
-  .mockapp .aside{min-height:inherit}
 
-</style>
+    /* ---------- standalone: the mockup IS the page ---------- */
+    body {
+      background: var(--bg);
+      color: var(--txt)
+    }
+
+    .mbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      background: rgba(12, 13, 16, .94);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .mbar .mbtitle {
+      font-weight: 700;
+      font-size: 13.5px
+    }
+
+    .mbar .mbdesc {
+      color: var(--dim);
+      font-size: 11.5px;
+      max-width: 520px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .mbar a {
+      color: var(--sub);
+      text-decoration: none;
+      font-size: 11.5px;
+      padding: 4px 9px;
+      border: 1px solid var(--border-2);
+      border-radius: 7px;
+      white-space: nowrap
+    }
+
+    .mbar a:hover {
+      color: var(--txt);
+      border-color: var(--accent)
+    }
+
+    @media (max-width:760px) {
+      .mbar .mbdesc {
+        display: none
+      }
+    }
+
+    .mockapp {
+      min-height: calc(100vh - 55px);
+      background: var(--bg);
+      color: var(--txt)
+    }
+
+    .mockapp .content {
+      overflow: auto
+    }
+
+    .mockapp .aside {
+      min-height: inherit
+    }
+  </style>
 </head>
+
 <body>
-<div class="mbar">
-  <span class="mbtitle"><span style="color:var(--accent-hi)">UC-01c</span> Registrarse</span>
-  <span class="mbdesc" title="Alta de cuenta por email y contraseña. La contraseña se almacena con hash (bcrypt).">Alta de cuenta por email y contraseña. La contraseña se almacena con hash (bcrypt).</span>
-  <span style="flex:1"></span>
-<a href="index.html">Índice</a>
+  <div class="mbar">
+    <span class="mbtitle"><span style="color:var(--accent-hi)">UC-01c</span> Registrarse</span>
+    <span class="mbdesc"
+      title="Alta de cuenta por email y contraseña. La contraseña se almacena con hash (bcrypt).">Alta de cuenta por
+      email y contraseña. La contraseña se almacena con hash (bcrypt).</span>
+    <span style="flex:1"></span>
+    <a href="index.html">Índice</a>
     <a href="uc-01b-iniciar-sesion.html">‹ UC-01b</a>
     <a href="uc-02-crear-nota.html">UC-02 ›</a>
     <a href="../04-mockups.html">Galería</a>
-</div>
-<div class="mockapp">
+  </div>
+  <div class="mockapp">
 
-            <div style="display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px">
-              <div
-                style="width:min(400px,100%); border:1px solid var(--border); background:var(--panel); border-radius:14px; padding:24px 26px">
-                <b style="font-size:17px">Crea tu cuenta</b>
-                <p style="color:var(--sub); font-size:12.5px; margin:3px 0 18px">Plan Gratis incluido · 5 GB de adjuntos
-                </p>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px">
-                  <div><label class="label">NOMBRE</label><input class="input" style="width:100%"
-                      placeholder="Ana Pérez"></div>
-                  <div><label class="label">APELLIDO</label><input class="input" style="width:100%" placeholder="Pérez">
-                  </div>
-                </div>
-                <div style="margin-bottom:10px"><label class="label">EMAIL</label><input class="input"
-                    style="width:100%" placeholder="tucorreo@ejemplo.com"></div>
-                <div style="margin-bottom:10px"><label class="label">CONTRASEÑA</label><input class="input"
-                    style="width:100%" value="••••••••••"></div>
-                <div style="margin-bottom:16px"><label class="label">CONFIRMAR CONTRASEÑA</label><input class="input"
-                    style="width:100%" value="••••••••••"></div>
-                <span class="btn primary" style="width:100%; justify-content:center">Crear cuenta</span>
-                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:14px">
-                  <span class="chip ok">Contraseña cifrada</span>
-                  <span class="chip">Sin tarjeta</span>
-                </div>
-                <div style="text-align:center; color:var(--sub); font-size:11.5px; margin-top:14px">
-                  Al crear la cuenta aceptas los términos. <span style="color:var(--accent-hi)">Política de
-                    privacidad</span>
-                </div>
-              </div>
-            </div>
-</div>
+    <div style="display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px">
+      <div
+        style="width:min(400px,100%); border:1px solid var(--border); background:var(--panel); border-radius:14px; padding:24px 26px">
+        <b style="font-size:17px">Crea tu cuenta</b>
+        <p style="color:var(--sub); font-size:12.5px; margin:3px 0 18px">Plan Gratis incluido · 5 GB de adjuntos
+        </p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px">
+          <div><label class="label">NOMBRE</label><input class="input" style="width:100%" placeholder="Ana Pérez"></div>
+          <div><label class="label">APELLIDO</label><input class="input" style="width:100%" placeholder="Pérez">
+          </div>
+        </div>
+        <div style="margin-bottom:10px"><label class="label">EMAIL</label><input class="input" style="width:100%"
+            placeholder="tucorreo@ejemplo.com"></div>
+        <div style="margin-bottom:10px"><label class="label">CONTRASEÑA</label><input class="input" style="width:100%"
+            value="••••••••••"></div>
+        <div style="margin-bottom:16px"><label class="label">CONFIRMAR CONTRASEÑA</label><input class="input"
+            style="width:100%" value="••••••••••"></div>
+        <span class="btn primary" style="width:100%; justify-content:center">Crear cuenta</span>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:14px">
+          <span class="chip ok">Contraseña cifrada</span>
+          <span class="chip">Sin tarjeta</span>
+        </div>
+        <div style="text-align:center; color:var(--sub); font-size:11.5px; margin-top:14px">
+          Al crear la cuenta aceptas los términos. <span style="color:var(--accent-hi)">Política de
+            privacidad</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
+
 </html>

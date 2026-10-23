@@ -48,7 +48,6 @@
    }
 
    .footer{
-     display:grid;
      grid-template-columns:repeat(4,1fr);
      gap:1px;
    }
@@ -77,3 +76,37 @@
       font-size: 11px;
       white-space: nowrap
    }
+
+/* Custom Card Modifications */
+.card-custom {
+  border-radius: 14px; /* Native BS uses standard sizes like rounded-3 (0.5rem / 8px) */
+border:1px solid var(--border);
+     background:var(--panel);
+}
+
+/* Extra small text helper for legal micro-copy */
+.extra-small {
+  font-size: 11.5px;
+}
+
+/* Form label styling refinement */
+.form-label-sm {
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--bs-secondary-color);
+}
+
+
+    input {
+      background: #0e1013 !important;
+      border: 1px solid var(--border-2) !important;
+      color: var(--txt) !important;
+      border-radius: 8px !important;
+      font-size: 13px !important;
+      font-family: inherit
+    }
+
+    input::placeholder {
+      color: var(--dim)
+    }
+

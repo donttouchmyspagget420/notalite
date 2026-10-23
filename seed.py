@@ -1,16 +1,19 @@
 from datetime import timezone
 import os
 import random
+from dotenv import load_dotenv
 from faker import Faker
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from flask_bcrypt import generate_password_hash
 from models import db, Role, User, Directory, Note, Collab, Tag
 
+load_dotenv()
+
 DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI")
 
 if not DATABASE_URI:
-    raise ValueError("DATABASE_URL environment variable is not set")
+    raise ValueError("SQLALCHEMY_DATABASE_URI environment variable is not set")
 
 engine = create_engine(DATABASE_URI)
 Session = sessionmaker(bind=engine)
