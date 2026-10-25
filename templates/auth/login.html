@@ -1,54 +1,60 @@
-{% extends 'layouts/template_sin.html' %}
-
+{% extends "layouts/template_sin.html" %}
 {% block title %}NotaLite - Login{% endblock %}
-
 {% block content %}
-
-
-<div class="min-vh-100 d-flex align-items-center justify-content-center p-3">
-  <div class="w-100 p-4" style="max-width: 400px;">
-      
-      <!-- Header -->
-    <h5 class="text-center">
-    <a class="navbar-brand" href="#">
-      <img width="20" src="{{ url_for('static', filename='imgs/logo.png') }}" alt="logo">
-      <b style="font-size: 14px;">NotaLite</b>
-    </a>
-    </h5>
-
-      <!-- Form -->
-      <form>
-        <!-- Email -->
-        <div class="mb-2">
-          <label for="email" class="form-label form-label-sm text-uppercase fw-semibold">Email</label>
-          <input type="email" class="form-control" id="email" placeholder="tucorreo@ejemplo.com">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+    <div class="min-vh-100 d-flex align-items-center justify-content-center p-3">
+        <div class="w-100 p-4" style="max-width: 400px;">
+            <!-- Header -->
+            <h5 class="text-center">
+                <a class="navbar-brand" href="#">
+                    <img width="20"
+                         src="{{ url_for('static', filename='imgs/logo.png') }}"
+                         alt="logo">
+                    <b style="font-size: 14px;">NotaLite</b>
+                </a>
+            </h5>
+            <!-- Form -->
+            <form action='{{ url_for("login") }}' method='post'>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <!-- Email -->
+                <div class="mb-2">
+                    <label for="email"
+                           class="form-label form-label-sm text-uppercase fw-semibold">Email</label>
+                    <input type="email"
+                           class="form-control"
+                           id="email"
+                           name="email"
+                           placeholder="tucorreo@ejemplo.com">
+                </div>
+                <!-- Password -->
+                <div class="mb-2">
+                    <label for="password"
+                           class="form-label form-label-sm text-uppercase fw-semibold">Contraseña</label>
+                    <input type="password"
+                           class="form-control"
+                           id="password"
+                           value=""
+                           name="password">
+                </div>
+                <!-- TODO: pasword reset view-->
+                <div class="w-100 text-end mb-2">
+                    <a href="https://youtu.be/dQw4w9WgXcQ?si=KgPvECkeQ-Trn3N8" class="hi">¿Olvidaste tu contraseña?</a>
+                </div>
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-main w-100">Iniciar sesión</button>
+            </form>
+            <h5 class="text-center mt-2 text-secondary">O</h5>
+            <button type="submit"
+                    class="btn btn-dark w-100">Loguearse con Google   <i class="bi bi-google"></i></button>
+            <!-- Footer Terms -->
+            <div class="text-center text-muted mt-3">
+                <p style="font-size:11px">¿Aún no tienes cuenta?<a class="hi"
+   href="{{ url_for("signup") }}">Regístrate</a></p>
+            </div>
         </div>
-
-        <!-- Password -->
-        <div class="mb-2">
-          <label for="password" class="form-label form-label-sm text-uppercase fw-semibold">Contraseña</label>
-          <input type="password" class="form-control" id="password" value="">
-        </div>
-
-      <!-- TODO: pasword reset view-->
-      <div class="w-100 text-end mb-2">
-      <a href="https://youtu.be/dQw4w9WgXcQ?si=KgPvECkeQ-Trn3N8" class="hi">¿Olvidaste tu contraseña?</a>
-      </div>
-
-        <!-- Submit Button -->
-        <button type="submit" class="btn btn-main w-100">Iniciar sesión</button>
-      </form>
-
-      <h5 class="text-center mt-2 text-secondary">O</h5>
-
-      <button type="submit" class="btn btn-dark w-100">Loguearse con Google   <i class="bi bi-google"></i></button>
-
-      <!-- Footer Terms -->
-      <div class="text-center text-muted mt-3">
-        <p style="font-size:11px;">¿Aún no tienes cuenta?<a class="hi" href="{{ url_for('signup') }}">Regístrate</a></p>   
-      </div>
-
-  </div>
-</div>
-
+    </div>
 {% endblock %}

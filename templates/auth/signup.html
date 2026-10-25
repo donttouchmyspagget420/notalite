@@ -1,64 +1,84 @@
-{% extends 'layouts/template_sin.html' %}
-
+{% extends "layouts/template_sin.html" %}
 {% block title %}NotaLite - Signup{% endblock %}
-
 {% block content %}
-
-<div class="min-vh-100 d-flex align-items-center justify-content-center p-3">
-  <div class="card card-custom p-4 shadow-sm">
-    <div class="card-body p-0">
-      
-      <!-- Header -->
-      <h5 class="fw-bold">Crea tu cuenta</h5>
-
-      <!-- Form -->
-      <form>
-        <!-- Name Row -->
-        <div class="row g-2 mb-2">
-          <div class="col-6">
-            <label for="firstName" class="form-label form-label-sm text-uppercase fw-semibold">Nombre</label>
-            <input type="text" class="form-control" id="firstName" placeholder="Ana Pérez">
-          </div>
-          <div class="col-6">
-            <label for="lastName" class="form-label form-label-sm text-uppercase fw-semibold">Apellido</label>
-            <input type="text" class="form-control" id="lastName" placeholder="Pérez">
-          </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+    <div class="min-vh-100 d-flex align-items-center justify-content-center p-3">
+        <div class="card card-custom p-4 shadow-sm">
+            <div class="card-body p-0">
+                <!-- Header -->
+                <h5 class="fw-bold">Crea tu cuenta</h5>
+                <!-- Form -->
+                <form action='{{ url_for("signup") }}' method='post'>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <!-- Name Row -->
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label for="firstName"
+                                   class="form-label form-label-sm text-uppercase fw-semibold">Nombre</label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="firstName"
+                                   placeholder="Ana Pérez"
+                                   name="name">
+                        </div>
+                        <div class="col-6">
+                            <label for="lastName"
+                                   class="form-label form-label-sm text-uppercase fw-semibold">Apellido</label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="lastName"
+                                   placeholder="Pérez"
+                                   name="surname">
+                        </div>
+                    </div>
+                    <!-- Email -->
+                    <div class="mb-2">
+                        <label for="email"
+                               class="form-label form-label-sm text-uppercase fw-semibold">Email</label>
+                        <input type="email"
+                               class="form-control"
+                               id="email"
+                               placeholder="tucorreo@ejemplo.com"
+                               name="email">
+                    </div>
+                    <!-- Password -->
+                    <div class="mb-2">
+                        <label for="password"
+                               class="form-label form-label-sm text-uppercase fw-semibold">Contraseña</label>
+                        <input type="password"
+                               class="form-control"
+                               id="password"
+                               value=""
+                               name="password">
+                    </div>
+                    <!-- Confirm Password -->
+                    <div class="mb-3">
+                        <label for="confirmPassword"
+                               class="form-label form-label-sm text-uppercase fw-semibold">Confirmar Contraseña</label>
+                        <input type="password"
+                               class="form-control"
+                               id="confirmPassword"
+                               value=""
+                               name="password_confirm">
+                    </div>
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-main w-100">Crear cuenta</button>
+                </form>
+                <h5 class="text-center mt-2 text-secondary">O</h5>
+                <a type="submit"
+                   class="btn btn-dark w-100"
+                   href="{{ url_for("signup_google") }}">Registrarse con Google   <i class="bi bi-google"></i></a>
+                <!-- Footer Terms -->
+                <div class="text-center text-muted mt-3 extra-small">
+                    Al crear la cuenta aceptas los términos.
+                    <a href="https://youtu.be/dQw4w9WgXcQ?si=KgPvECkeQ-Trn3N8"
+                       class="text-decoration-none">Política de privacidad</a>
+                </div>
+            </div>
         </div>
-
-        <!-- Email -->
-        <div class="mb-2">
-          <label for="email" class="form-label form-label-sm text-uppercase fw-semibold">Email</label>
-          <input type="email" class="form-control" id="email" placeholder="tucorreo@ejemplo.com">
-        </div>
-
-        <!-- Password -->
-        <div class="mb-2">
-          <label for="password" class="form-label form-label-sm text-uppercase fw-semibold">Contraseña</label>
-          <input type="password" class="form-control" id="password" value="">
-        </div>
-
-        <!-- Confirm Password -->
-        <div class="mb-3">
-          <label for="confirmPassword" class="form-label form-label-sm text-uppercase fw-semibold">Confirmar Contraseña</label>
-          <input type="password" class="form-control" id="confirmPassword" value="">
-        </div>
-
-        <!-- Submit Button -->
-        <button type="submit" class="btn btn-main w-100">Crear cuenta</button>
-      </form>
-
-      <h5 class="text-center mt-2 text-secondary">O</h5>
-
-      <button type="submit" class="btn btn-dark w-100">Registrarse con Google   <i class="bi bi-google"></i></button>
-
-      <!-- Footer Terms -->
-      <div class="text-center text-muted mt-3 extra-small">
-        Al crear la cuenta aceptas los términos. 
-        <a href="https://youtu.be/dQw4w9WgXcQ?si=KgPvECkeQ-Trn3N8" class="text-decoration-none">Política de privacidad</a>
-      </div>
-
     </div>
-  </div>
-</div>
-
 {% endblock %}
