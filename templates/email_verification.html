@@ -1,0 +1,35 @@
+{% extends "layouts/template_sin.html" %}
+{% block title %}Verifica tu email{% endblock %}
+{% block content %}
+    <!-- Email verification: black box form -->
+    <div class="d-flex align-items-center justify-content-center p-3"
+         style="min-height: 100vh">
+        <div class="card-custom p-4 shadow-sm">
+            <div class="text-center mb-3">
+                <i class="bi bi-envelope-check fs-3"></i>
+                <h5 class="fw-bold mb-1">Verifica tu email</h5>
+                <div class="text-secondary extra-small">Introduce el código que te enviamos por correo.</div>
+            </div>
+            <form action='{{ url_for("email_verification") }}' method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <div class="mb-3">
+                    <label for="code"
+                           class="form-label form-label-sm text-uppercase fw-semibold">Código</label>
+                    <input type="text"
+                           class="form-control text-center"
+                           id="code"
+                           name="code"
+                           inputmode="numeric"
+                           autocomplete="one-time-code"
+                           maxlength="6"
+                           placeholder="••••••"
+                           required
+                           style="letter-spacing: 8px;
+                                  font-size: 20px" />
+                </div>
+                <button type="submit" class="btn btn-main w-100">Enviar</button>
+            </form>
+            <div class="text-center text-muted extra-small mt-3">¿No recibiste nada? Revisa tu carpeta de spam.</div>
+        </div>
+    </div>
+{% endblock %}
