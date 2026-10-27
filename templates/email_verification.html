@@ -18,7 +18,7 @@
                     <input type="text"
                            class="form-control text-center"
                            id="code"
-                           name="code"
+                           name="code_form"
                            inputmode="numeric"
                            autocomplete="one-time-code"
                            maxlength="6"
@@ -27,6 +27,8 @@
                            style="letter-spacing: 8px;
                                   font-size: 20px" />
                 </div>
+                <input type="hidden" name="user" value="{{ user }}" />
+                <input type="hidden" name="code" value="{{ code }}" />
                 <button type="submit" class="btn btn-main w-100">Enviar</button>
             </form>
             <div class="text-center text-muted extra-small mt-3">¿No recibiste nada? Revisa tu carpeta de spam.</div>

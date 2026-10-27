@@ -12,16 +12,24 @@ import random
 load_dotenv()
 
 app = Flask(__name__)
-bcrypt = Bcrypt(app)
-csrf = CSRFProtect(app);
-login_manager = LoginManager(app)
-mail = Mail(app)
+
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+app.config['MAIL_PORT'] =os.getenv('MAIL_PORT') 
+app.config['MAIL_USE_TLS'] =os.getenv('MAIL_USE_TLS') 
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] =os.getenv('MAIL_PASSWORD') 
+app.config['MAIL_DEFAULT_SENDER'] =os.getenv('MAIL_DEFAULT_SENDER') 
 
 app.secret_key = os.getenv("SECRET_KEY")
 
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI")
 
 db.init_app(app)
+
+bcrypt = Bcrypt(app)
+csrf = CSRFProtect(app);
+login_manager = LoginManager(app)
+mail = Mail(app)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -80,7 +88,7 @@ def signup():
             code = random.randint(100000, 999999)
             email_send_verification(email,code)
             #TODO: make dashboard
-            return render_template("email_verification.html",user=user) 
+            return render_template("email_verification.html",user=user,code=code) 
         
     return render_template('auth/signup.html')
 
@@ -92,12 +100,18 @@ def login_google():
 def signup_google():
     return render_template('auth/signup.html')
 
-@app.route('/auth/mail/verification', methods="POST")
+@app.route('/auth/mail/verification', methods=["POST"])
 def email_verification():
-    code_email = request.form.get("code_email")
+    code_form = request.form.get("code_email")
     code = request.form.get("code")
-    if code == code_email:
+    user = request.form.get("user")
+    if code == code_form and code and user and code_form:
+        db.session.add(user)
+        db.session.commit()
+        flash("cliente creado exitosamente","success")
         return render_template("index.html")
+    flash("el codigó no es correcto","warning")
+    return render_template("email_verification.html",code=code,user=user)
 
 def email_send_verification(email,code):
     msg = EmailMessage(
