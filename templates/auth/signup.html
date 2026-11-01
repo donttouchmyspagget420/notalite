@@ -12,7 +12,7 @@
                 <!-- Header -->
                 <h5 class="fw-bold">Crea tu cuenta</h5>
                 <!-- Form -->
-                <form action='{{ url_for("signup") }}' method='post'>
+                <form action='{{ url_for("auth.signup") }}' method='post'>
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <!-- Name Row -->
                     <div class="row g-2 mb-2">
@@ -76,7 +76,7 @@
                 <h5 class="text-center mt-2 text-secondary">O</h5>
                 <a type="submit"
                    class="btn btn-dark w-100"
-                   href="{{ url_for("signup_google") }}">Registrarse con Google   <i class="bi bi-google"></i></a>
+                   href="{{ url_for('auth.signup_google') }}">Registrarse con Google   <i class="bi bi-google"></i></a>
                 <!-- Footer Terms -->
                 <div class="text-center text-muted mt-3 extra-small">
                     Al crear la cuenta aceptas los términos.

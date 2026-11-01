@@ -18,7 +18,7 @@
                 </a>
             </h5>
             <!-- Form -->
-            <form action='{{ url_for("login") }}' method='post'>
+            <form action='{{ url_for("auth.login") }}' method='post'>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <!-- Email -->
                 <div class="mb-2">
@@ -55,7 +55,7 @@
             <!-- Footer Terms -->
             <div class="text-center text-muted mt-3">
                 <p style="font-size:11px">¿Aún no tienes cuenta?<a class="hi"
-   href="{{ url_for("signup") }}">Regístrate</a></p>
+   href="{{ url_for('auth.signup') }}">Regístrate</a></p>
             </div>
         </div>
     </div>

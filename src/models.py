@@ -1,8 +1,9 @@
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin
-from datetime import datetime,timezone
+from datetime import datetime, timezone
 
-db = SQLAlchemy()
+from flask_login import UserMixin
+
+from src.extensions import db
+
 
 def utcnow():
     return datetime.now(timezone.utc)

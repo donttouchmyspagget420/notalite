@@ -1,38 +1,28 @@
-from datetime import timezone
-import os
 import random
-from dotenv import load_dotenv
+from datetime import timezone
+
 from faker import Faker
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from flask_bcrypt import generate_password_hash
-from models import db, Role, User, Directory, Note, Collab, Tag
 
-load_dotenv()
+from src.extensions import db
+from src.models import Collab, Directory, Note, Role, Tag, User
 
-DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI")
-
-if not DATABASE_URI:
-    raise ValueError("SQLALCHEMY_DATABASE_URI environment variable is not set")
-
-engine = create_engine(DATABASE_URI)
-Session = sessionmaker(bind=engine)
-session = Session()
 fake = Faker()
+
 
 def seed_database():
     print("Resetting database schema...")
-    db.metadata.drop_all(bind=engine)
-    db.metadata.create_all(bind=engine)
+    db.drop_all()
+    db.create_all()
 
     print("Seeding Roles...")
     roles_data = ['Admin', 'Editor', 'Viewer']
     roles = []
     for role_name in roles_data:
         role = Role(name=role_name)
-        session.add(role)
+        db.session.add(role)
         roles.append(role)
-    session.commit()
+    db.session.commit()
 
     print("Seeding Users...")
     users = []
@@ -46,9 +36,9 @@ def seed_database():
             avatar=fake.image_url(width=200, height=200),
             role=random.choice(roles)
         )
-        session.add(user)
+        db.session.add(user)
         users.append(user)
-    session.commit()
+    db.session.commit()
 
     print("Seeding Directories...")
     directories = []
@@ -58,7 +48,7 @@ def seed_database():
             user=user,
             parent=None
         )
-        session.add(root_dir)
+        db.session.add(root_dir)
         directories.append(root_dir)
 
         for _ in range(random.randint(2, 4)):
@@ -67,9 +57,9 @@ def seed_database():
                 user=user,
                 parent=random.choice([root_dir, None])
             )
-            session.add(sub_dir)
+            db.session.add(sub_dir)
             directories.append(sub_dir)
-    session.commit()
+    db.session.commit()
 
     print("Seeding Notes...")
     notes = []
@@ -91,9 +81,9 @@ def seed_database():
                 user=user,
                 directory=random.choice(user_dirs)
             )
-            session.add(note)
+            db.session.add(note)
             notes.append(note)
-    session.commit()
+    db.session.commit()
 
     print("Seeding Collaborations (Collabs)...")
     existing_collabs = set()
@@ -111,8 +101,8 @@ def seed_database():
                     user=col_user,
                     note=note
                 )
-                session.add(collab)
-    session.commit()
+                db.session.add(collab)
+    db.session.commit()
 
     print("Seeding Tags...")
     tag_names = ["Work", "Personal", "Ideas", "Important", "Archive", "Project"]
@@ -121,11 +111,7 @@ def seed_database():
             nombre=name,
             color=fake.hex_color()
         )
-        session.add(tag)
-    session.commit()
+        db.session.add(tag)
+    db.session.commit()
 
-    session.close()
     print("Database successfully seeded!")
-
-if __name__ == "__main__":
-    seed_database()   

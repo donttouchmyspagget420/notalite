@@ -22,8 +22,8 @@
             etiquetas y wiki-links. Al estilo Notion y Obsidian, pero simple.
         </p>
         <div class="btn-group" role="group">
-            <a href="{{ url_for("signup") }}" class="btn btn-main">Crear cuenta gratis</a>
-            <a href="{{ url_for("login") }}" class="btn text-secondary">Iniciar sesión</a>
+            <a href="{{ url_for('auth.signup') }}" class="btn btn-main">Crear cuenta gratis</a>
+            <a href="{{ url_for('auth.login') }}" class="btn text-secondary">Iniciar sesión</a>
         </div>
         <div class="d-flex mt-3 justify-content-center flex-wrap"
              style="display:flex;
