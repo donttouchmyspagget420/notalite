@@ -6,7 +6,7 @@ from flask_mailman import BadHeaderError, EmailMessage
 
 def send_verification_code(email, code):
     msg = EmailMessage(
-        subject="NotaLite",
+        subject="NotaLite - verificar el mail",
         body=f"Verifica tu email ingresando el código: {code} para registrarte",
         to=[email],
         from_email=current_app.config["MAIL_DEFAULT_SENDER"],

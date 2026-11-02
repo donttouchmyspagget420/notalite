@@ -7,7 +7,6 @@ from src.extensions import bcrypt, csrf, db, login_manager, mail
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 def create_app(config_object=Config):
     app = Flask(
         __name__,

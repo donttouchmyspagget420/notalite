@@ -1,6 +1,11 @@
 {% extends "layouts/template_sin.html" %}
 {% block title %}Verifica tu email{% endblock %}
 {% block content %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
     <!-- Email verification: black box form -->
     <div class="d-flex align-items-center justify-content-center p-3"
          style="min-height: 100vh">
@@ -27,8 +32,6 @@
                            style="letter-spacing: 8px;
                                   font-size: 20px" />
                 </div>
-                <input type="hidden" name="user" value="{{ user }}" />
-                <input type="hidden" name="code" value="{{ code }}" />
                 <button type="submit" class="btn btn-main w-100">Enviar</button>
             </form>
             <div class="text-center text-muted extra-small mt-3">¿No recibiste nada? Revisa tu carpeta de spam.</div>

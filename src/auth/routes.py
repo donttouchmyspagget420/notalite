@@ -5,15 +5,15 @@ from flask_login import login_user, logout_user
 
 from src.auth import bp
 from src.extensions import bcrypt, db
-from src.models import User
+from src.models import User,Pending
 from src.services.mailer import send_verification_code
 
 
 @bp.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form.get("email", "").strip()
-        password = request.form.get("password", "")
+        email = request.form.get("email")
+        password = request.form.get("password")
 
         if not email or not password:
             flash("Todos los campos son obligatorios", "danger")
@@ -39,11 +39,11 @@ def logout():
 @bp.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
-        nombre = request.form.get("name", "").strip()
-        apellido = request.form.get("surname", "").strip()
-        email = request.form.get("email", "").strip()
-        password = request.form.get("password", "")
-        confirm = request.form.get("confirm_password", "")
+        name = request.form.get("name")
+        surname = request.form.get("surname")
+        email = request.form.get("email")
+        password = request.form.get("password")
+        confirm = request.form.get("confirm_password")
 
         if not email or not password or not confirm:
             flash("Todos los campos son obligatorios", "danger")
@@ -53,13 +53,21 @@ def signup():
             flash("Las contraseñas deben coincidir", "warning")
         else:
             code = f"{random.randint(100000, 999999)}"
-            session["pending_signup"] = {
-                "name": f"{nombre} {apellido}".strip(),
-                "email": email,
-                "password": bcrypt.generate_password_hash(password).decode("utf-8"),
-                "code": code,
-            }
+
+            pending = Pending(
+                name=name + " " + surname,
+                email=email,
+                password=bcrypt.generate_password_hash(password),
+                role_id=1,
+                code=bcrypt.generate_password_hash(code)
+            )
+
+            db.session.add(pending)
+            db.session.commit()
+
+            session["pending_signup_email"] = pending.email; 
             send_verification_code(email, code)
+
             return render_template("email_verification.html")
 
     return render_template("auth/signup.html")
@@ -67,7 +75,7 @@ def signup():
 
 @bp.route("/mail/verification", methods=["POST"])
 def email_verification():
-    pending = session.get("pending_signup")
+    pending = Pending.query.filter_by(email=session["pending_signup_email"]).first()
     if not pending:
         flash("La sesión expiró, vuelve a registrarte", "warning")
         return redirect(url_for("auth.signup"))
@@ -80,11 +88,11 @@ def email_verification():
         name=pending["name"],
         email=pending["email"],
         password=pending["password"],
-        role_id=1,
+        role_id=pending["role_id"],
     )
     db.session.add(user)
     db.session.commit()
-    session.pop("pending_signup", None)
+    session.pop("pending_signup_email", None)
 
     flash("Cliente creado exitosamente", "success")
     return redirect(url_for("auth.login"))

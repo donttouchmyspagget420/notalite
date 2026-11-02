@@ -9,7 +9,6 @@ from src.extensions import db
 def db_cli():
     """Utilidades de base de datos."""
 
-
 @db_cli.command("init")
 @with_appcontext
 def init():

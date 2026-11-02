@@ -12,7 +12,7 @@ NotaLite es una aplicación web de notas con Markdown, carpetas, etiquetas, y no
 
 ```
 NotaLite/
-├── app.py                  //punto de entrada, crea y lanza la app
+├── .flaskenv                //FLASK_APP=src para usar la CLI sin --app
 ├── config.py               //configuracion leida del .env
 ├── requirements.txt
 ├── instance/               //base de datos sqlite local
@@ -64,26 +64,32 @@ NotaLite/
 
 `pip install -r requirements.txt`
 
-### Copia dotenv ejemplo y modifica
+### Copia dotenv y flaskenv ejemplo y modifica
 
 `cp .env.example .env`
+`cp .flaskenv.example .flaskenv`
 
 ### Prepara base de datos(solo sqlite)
 
-`flask --app app db init`
+`flask db init`
 
-`flask --app app db seed`
+`flask db seed`
 
 ### Lanza la app
 
-`python app.py`
+`flask run`
 
-## Herramientos
+Flask detecta la app automaticamente gracias al archivo `.flaskenv`.
+Si no querés usar `.flaskenv`, el equivalente explicito es:
 
-`flask --app app db init //crear la base de datos`
+`flask --app src run`
 
-`flask --app app db seed //llenarlo`
+## Herramientas
 
-`flask --app app db clear //limpiarlo`
+`flask db init //crear la base de datos`
 
-`flask --app app db check //ver todos las tablas`
+`flask db seed //llenarlo`
+
+`flask db clear //limpiarlo`
+
+`flask db check //ver todos las tablas`

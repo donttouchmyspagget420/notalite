@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from flask_login import UserMixin
 
@@ -15,6 +15,7 @@ class Role(db.Model):
     name = db.Column(db.String(100), nullable = False)
 
     users = db.relationship("User", back_populates="role")
+    pendings = db.relationship("Pending", back_populates="role")
 
 class User(db.Model,UserMixin):
     __tablename__ = 'users'
@@ -24,13 +25,26 @@ class User(db.Model,UserMixin):
     email = db.Column(db.String(255), unique = True, nullable = False)
     password = db.Column(db.String(255), nullable = False)
     avatar = db.Column(db.String(255))
-    timestamp = db.Column(db.DateTime(timezone = True), default = utcnow)
+    timestamp = db.Column(db.DateTime(timezone = True), default = utcnow())
     role_id = db.Column(db.Integer, db.ForeignKey("roles.id"), nullable = False)
 
     role = db.relationship("Role", back_populates = "users")
     directories = db.relationship("Directory", back_populates="user") 
     notes = db.relationship("Note", back_populates="user")  
     collabs = db.relationship("Collab", back_populates="user") 
+
+class Pending(db.Model):
+    __tablename__ = 'pendings'
+
+    name = db.Column(db.String(100), nullable = False)
+    email = db.Column(db.String(255), primary_key = True)
+    password = db.Column(db.String(255), nullable = False)
+    code = db.Column(db.String(255), nullable = False)
+    expires_at = db.Column(db.DateTime(timezone = True), default = utcnow() + timedelta(hours=24))
+    role_id = db.Column(db.Integer, db.ForeignKey("roles.id"), nullable = False)
+
+    role = db.relationship("Role", back_populates = "pendings")
+
 
 class Directory(db.Model):
     __tablename__ = 'directories'
@@ -53,8 +67,8 @@ class Note(db.Model):
     title = db.Column(db.String(255), nullable = False)
     name = db.Column(db.String(100), nullable = False)
     content = db.Column(db.Text, nullable = False)
-    created_at = db.Column(db.DateTime(timezone = True), default = utcnow)
-    modified_at = db.Column(db.DateTime(timezone = True), default = utcnow)
+    created_at = db.Column(db.DateTime(timezone = True), default = utcnow())
+    modified_at = db.Column(db.DateTime(timezone = True), default = utcnow())
     deleted_at = db.Column(db.DateTime(timezone = True))
     to_delete = db.Column(db.Boolean, default = False)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
