@@ -38,4 +38,5 @@ def create_app(config_object=Config):
 
     cli.init_app(app)
 
+
     return app

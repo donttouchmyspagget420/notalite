@@ -7,3 +7,4 @@ faker==40.43.0
 python-dotenv==1.2.4
 authlib==1.9.1
 Flask-Mailman==1.1.1
+requests==2.34.2

@@ -7,6 +7,7 @@ from src.auth import bp
 from src.extensions import bcrypt, db
 from src.models import User,Pending
 from src.services.mailer import send_verification_code
+from src.services.google import google
 
 
 @bp.route("/login", methods=["GET", "POST"])

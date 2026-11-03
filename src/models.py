@@ -21,9 +21,12 @@ class User(db.Model,UserMixin):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key = True)
+    # google id 
+    g_id = db.Column(db.String(100), unique = True, nullable = True)
     name = db.Column(db.String(100), nullable = False)
     email = db.Column(db.String(255), unique = True, nullable = False)
-    password = db.Column(db.String(255), nullable = False)
+    # nullable por gente que usa google id
+    password = db.Column(db.String(255), nullable = True)
     avatar = db.Column(db.String(255))
     timestamp = db.Column(db.DateTime(timezone = True), default = utcnow())
     role_id = db.Column(db.Integer, db.ForeignKey("roles.id"), nullable = False)

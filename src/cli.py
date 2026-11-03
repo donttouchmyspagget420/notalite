@@ -15,7 +15,6 @@ def init():
     db.create_all()
     click.echo("Tablas creadas.")
 
-
 @db_cli.command("clear")
 @with_appcontext
 def clear():
