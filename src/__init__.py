@@ -3,7 +3,8 @@ import os
 from flask import Flask
 
 from config import Config
-from src.extensions import bcrypt, csrf, db, login_manager, mail
+from src.extensions import bcrypt, csrf, db, login_manager, mail, oauth
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -15,12 +16,15 @@ def create_app(config_object=Config):
         instance_path=os.path.join(BASE_DIR, "instance"),
     )
     app.config.from_object(config_object)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
 
     db.init_app(app)
     bcrypt.init_app(app)
     csrf.init_app(app)
     mail.init_app(app)
     login_manager.init_app(app)
+    oauth.init_app(app)
 
     from src.models import User
 

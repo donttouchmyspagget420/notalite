@@ -50,12 +50,12 @@
                 <button type="submit" class="btn btn-main w-100">Iniciar sesión</button>
             </form>
             <h5 class="text-center mt-2 text-secondary">O</h5>
-            <button type="submit"
-                    class="btn btn-dark w-100">Loguearse con Google   <i class="bi bi-google"></i></button>
+            <button class="btn btn-dark w-100"
+                    href="{{ url_for("auth.login_google") }}">Loguearse con Google   <i class="bi bi-google"></i></button>
             <!-- Footer Terms -->
             <div class="text-center text-muted mt-3">
                 <p style="font-size:11px">¿Aún no tienes cuenta?<a class="hi"
-   href="{{ url_for('auth.signup') }}">Regístrate</a></p>
+   href="{{ url_for("auth.signup") }}">Regístrate</a></p>
             </div>
         </div>
     </div>

@@ -1,13 +1,14 @@
 import random
 
 from flask import flash, redirect, render_template, request, session, url_for
+from flask_bcrypt import check_password_hash
 from flask_login import login_user, logout_user
 
 from src.auth import bp
 from src.extensions import bcrypt, db
 from src.models import User,Pending
 from src.services.mailer import send_verification_code
-from src.services.google import google
+from src.services.google import getUserInfo,googleUri
 
 
 @bp.route("/login", methods=["GET", "POST"])
@@ -60,7 +61,7 @@ def signup():
                 email=email,
                 password=bcrypt.generate_password_hash(password),
                 role_id=1,
-                code=bcrypt.generate_password_hash(code)
+                code=code
             )
 
             db.session.add(pending)
@@ -81,29 +82,54 @@ def email_verification():
         flash("La sesión expiró, vuelve a registrarte", "warning")
         return redirect(url_for("auth.signup"))
 
-    if request.form.get("code_form") != pending["code"]:
+    code_form = request.form.get("code_form")
+
+    if code_form != pending.code:
         flash("El código no es correcto", "warning")
         return render_template("email_verification.html")
 
     user = User(
-        name=pending["name"],
-        email=pending["email"],
-        password=pending["password"],
-        role_id=pending["role_id"],
+        name=pending.name,
+        email=pending.email,
+        password=pending.password,
+        role_id=pending.role_id,
     )
+
     db.session.add(user)
     db.session.commit()
     session.pop("pending_signup_email", None)
 
-    flash("Cliente creado exitosamente", "success")
-    return redirect(url_for("auth.login"))
+    login_user(user)
 
+    flash("Cliente creado exitosamente", "success")
+    return redirect(url_for("main.root"))
 
 @bp.route("/login/google")
 def login_google():
-    return render_template("auth/signup.html")
+    return googleUri()
 
+@bp.route("/google/callback")
+def callback_google():
+    userinfo = getUserInfo()
+    if not userinfo:
+        flash("no puede obtener la informacion de usuario","danger")
+        return redirect(url_for('auth.signup'))
+    
+    user = User.query.filter_by(g_id = userinfo["sub"]).first()
+    if not user:
+        user = User(
+            g_id = userinfo["sub"],
+            email = userinfo["email"],
+            name = userinfo["name"],
+            avatar = userinfo["picture"],
+            role_id = 1
+        )
 
-@bp.route("/signup/google")
-def signup_google():
-    return render_template("auth/signup.html")
+        db.session.add(user)
+        db.session.commit()
+
+    login_user(user)
+
+    flash("Logueado exitosamente", "success")
+    return redirect(url_for('main.root'))
+    

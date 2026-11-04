@@ -13,7 +13,6 @@ def send_verification_code(email, code):
     )
     try:
         msg.send()
-        flash("Correo electrónico enviado con éxito.", "success")
     except BadHeaderError:
         flash("Encabezado no válido detectado.", "danger")
     except (ConnectionRefusedError, smtplib.SMTPException):
