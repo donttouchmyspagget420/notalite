@@ -24,6 +24,8 @@ def create_app(config_object=Config):
     csrf.init_app(app)
     mail.init_app(app)
     login_manager.init_app(app)
+    login_manager.login_view = "auth.login"
+    login_manager.login_message_category = "warning"
     oauth.init_app(app)
 
     from src.models import User

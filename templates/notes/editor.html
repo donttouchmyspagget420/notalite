@@ -2,12 +2,12 @@
 
 {% set active_nav = 'home' %}
 
-{% block title %}NotaLite - Editar nota{% endblock %}
+{% block title %}NotaLite - {{ note.title }}{% endblock %}
 
 {% block app_content %}
     <div class="app-mainbar editor-mainbar">
         <a class="btn btn-app-ghost btn-app-sm"
-           href="{{ url_for('main.root') }}"
+           href="{{ url_for('notes.list_notes') }}"
            aria-label="Volver">
             <i class="bi bi-arrow-left"></i>
         </a>
@@ -15,20 +15,65 @@
         <input class="note-title-input"
                id="noteTitle"
                type="text"
-               value="Guía rápida de Markdown"
+               value="{{ note.title }}"
+               data-save-url="{{ url_for('notes.save_note', note_id=note.id) }}"
                aria-label="Título de la nota">
 
-        <span class="chip chip-tag">#ideas</span>
-        <span class="chip"><i class="bi bi-folder2"></i> Trabajo</span>
+        {% for tag in note.tags %}
+            <a class="chip chip-tag" href="{{ url_for('notes.tags', tag_id=tag.id) }}">
+                <span class="tag-dot" style="--tag-color: {{ tag.color }}"></span>
+                #{{ tag.nombre }}
+            </a>
+        {% endfor %}
+
+        <a class="chip" href="{{ url_for('notes.folders', directory_id=note.directory.id) }}">
+            <i class="bi bi-folder2"></i> {{ note.directory.name }}
+        </a>
 
         <div class="ms-auto d-flex align-items-center gap-2">
             <span class="chip chip-ok" id="saveStatus">
-                <b>✓</b> Guardado · 12:04
+                <b>✓</b> Guardado · {{ note.modified_at.strftime('%H:%M') }}
             </span>
-            <button class="btn btn-app" type="button">
+
+            <div class="dropdown">
+                <button class="btn btn-app-ghost"
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        data-bs-auto-close="outside"
+                        aria-expanded="false"
+                        aria-label="Editar etiquetas">
+                    <i class="bi bi-tags"></i>
+                </button>
+                <form class="dropdown-menu dropdown-menu-end app-dropdown tag-picker"
+                      method="post"
+                      action="{{ url_for('notes.update_note_tags', note_id=note.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <div class="tag-picker-title">Etiquetas de la nota</div>
+                    {% for tag, count in sidebar_tags %}
+                        <label class="tag-picker-item">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="tag_ids"
+                                   value="{{ tag.id }}"
+                                   {% if tag.id in note_tag_ids %}checked{% endif %}>
+                            <span class="tag-dot" style="--tag-color: {{ tag.color }}"></span>
+                            <span>#{{ tag.nombre }}</span>
+                        </label>
+                    {% else %}
+                        <div class="tag-picker-empty">No hay etiquetas creadas.</div>
+                    {% endfor %}
+                    <button class="btn btn-app-primary btn-app-sm w-100 mt-2" type="submit">
+                        Guardar etiquetas
+                    </button>
+                </form>
+            </div>
+
+            <button class="btn btn-app" type="button" data-copy-link>
                 <i class="bi bi-share"></i>
                 Compartir
             </button>
+
             <div class="dropdown">
                 <button class="btn btn-app-ghost"
                         type="button"
@@ -39,20 +84,26 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end app-dropdown">
                     <li>
-                        <a class="dropdown-item" href="#">
+                        <a class="dropdown-item"
+                           href="{{ url_for('notes.export_note', note_id=note.id, export_format='md') }}">
                             <i class="bi bi-download me-2"></i>Exportar a Markdown
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#">
+                        <a class="dropdown-item"
+                           href="{{ url_for('notes.export_note', note_id=note.id, export_format='pdf') }}">
                             <i class="bi bi-file-earmark-pdf me-2"></i>Exportar a PDF
                         </a>
                     </li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
-                        <a class="dropdown-item text-danger" href="#">
-                            <i class="bi bi-trash3 me-2"></i>Mover a papelera
-                        </a>
+                        <form method="post" action="{{ url_for('notes.delete_note', note_id=note.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="next" value="{{ url_for('notes.list_notes') }}">
+                            <button class="dropdown-item text-danger" type="submit">
+                                <i class="bi bi-trash3 me-2"></i>Mover a papelera
+                            </button>
+                        </form>
                     </li>
                 </ul>
             </div>
@@ -71,30 +122,13 @@
         <textarea class="editor-source"
                   id="editorSource"
                   spellcheck="false"
-                  aria-label="Contenido Markdown"># Guía rápida
-Bienvenido/a a **NotaLite**.
-
-## Encabezados
-Usa `#` para títulos.
-
-## Listas
-- primer elemento
-- segundo elemento
-
-## Código
-```python
-def hola():
-    return "hello"
-```
-
-## Enlace entre notas
-Ver [[Conceptos básicos]].</textarea>
+                  aria-label="Contenido Markdown">{{ note.content }}</textarea>
 
         <div class="editor-preview markdown-body" id="editorPreview"></div>
     </div>
 
     <div class="editor-foot">
-        <span><span id="wordCount">184</span> palabras</span>
+        <span><span id="wordCount">{{ word_count }}</span> palabras</span>
         <span>Autoguardado cada 2 s tras escribir</span>
         <span class="ms-auto">Markdown habilitado</span>
     </div>

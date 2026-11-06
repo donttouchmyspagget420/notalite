@@ -675,6 +675,7 @@ input::placeholder {
   flex: 0 0 auto;
   display: inline-block;
   border-radius: 50%;
+  background-color: var(--tag-color, transparent);
 }
 
 .note-row > .tag-dot {
@@ -1221,6 +1222,155 @@ mark {
 .import-list {
   flex: 1;
   margin-top: 12px;
+}
+
+/* =========================================================
+   Flashes
+   ========================================================= */
+.app-flashes {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1080;
+  width: min(360px, calc(100vw - 32px));
+}
+
+.app-alert {
+  margin-bottom: 8px;
+  padding: 10px 36px 10px 13px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+.app-alert.alert-success {
+  border-color: rgba(52, 211, 153, 0.4);
+  background: rgba(52, 211, 153, 0.12);
+  color: #7ee8bd;
+}
+
+.app-alert.alert-warning {
+  border-color: rgba(251, 191, 36, 0.4);
+  background: rgba(251, 191, 36, 0.12);
+  color: #f5d27a;
+}
+
+.app-alert.alert-danger {
+  border-color: rgba(248, 113, 113, 0.4);
+  background: rgba(248, 113, 113, 0.12);
+  color: #ffa3a3;
+}
+
+.app-alert.alert-info {
+  border-color: rgba(96, 165, 250, 0.4);
+  background: rgba(96, 165, 250, 0.12);
+  color: #9cc8ff;
+}
+
+.app-alert .btn-close {
+  padding: 0.85rem;
+  filter: invert(1) grayscale(1);
+  opacity: 0.55;
+}
+
+.app-sidebar-empty {
+  padding: 3px 8px 3px 22px;
+  color: var(--dim);
+  font-size: 11.5px;
+  font-style: italic;
+}
+
+.app-navitem-indent-3 {
+  padding-left: 52px;
+}
+
+/* =========================================================
+   Tag picker dropdown
+   ========================================================= */
+.app-dropdown .tag-picker,
+.tag-picker {
+  min-width: 230px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.tag-picker-title {
+  margin-bottom: 8px;
+  color: var(--dim);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tag-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  color: var(--sub);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.tag-picker-item:hover {
+  background: var(--panel-2);
+  color: var(--txt);
+}
+
+.tag-picker-item .form-check-input {
+  flex: 0 0 auto;
+  margin: 0;
+  border: 1px solid var(--border-2) !important;
+  background-color: transparent !important;
+}
+
+.tag-picker-item .form-check-input:checked {
+  border-color: var(--accent) !important;
+  background-color: var(--accent) !important;
+}
+
+.tag-picker-empty {
+  padding: 6px;
+  color: var(--dim);
+  font-size: 11.5px;
+}
+
+.dropdown-menu form {
+  margin: 0;
+}
+
+.dropdown-menu .dropdown-item {
+  white-space: normal;
+}
+
+/* =========================================================
+   Settings selects
+   ========================================================= */
+.settings-select {
+  margin-bottom: 0;
+  border: 1px solid var(--border-2) !important;
+  border-radius: 8px !important;
+  background-color: #0e1013 !important;
+  color: var(--txt) !important;
+  font-size: 12.5px !important;
+}
+
+.settings-select:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-soft) !important;
+}
+
+.settings-select option {
+  background: #0e1013;
+  color: var(--txt);
+}
+
+.export-option:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 /* =========================================================

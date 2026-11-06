@@ -106,12 +106,19 @@ def seed_database():
 
     print("Seeding Tags...")
     tag_names = ["Work", "Personal", "Ideas", "Important", "Archive", "Project"]
+    tags = []
     for name in tag_names:
         tag = Tag(
             nombre=name,
             color=fake.hex_color()
         )
         db.session.add(tag)
+        tags.append(tag)
+    db.session.commit()
+
+    print("Assigning tags to notes...")
+    for note in notes:
+        note.tags = random.sample(tags, random.randint(0, 3))
     db.session.commit()
 
     print("Database successfully seeded!")

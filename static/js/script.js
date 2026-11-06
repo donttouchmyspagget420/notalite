@@ -4,6 +4,11 @@
   const qs = (selector, root) => (root || document).querySelector(selector);
   const qsa = (selector, root) => Array.from((root || document).querySelectorAll(selector));
 
+  function csrfToken() {
+    const meta = qs('meta[name="csrf-token"]');
+    return meta ? meta.content : "";
+  }
+
   function escapeHtml(value) {
     return String(value)
       .replace(/&/g, "&amp;")
@@ -11,18 +16,45 @@
       .replace(/>/g, "&gt;");
   }
 
-  function currentTime() {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    return hours + ":" + minutes;
-  }
-
   function formatBytes(bytes) {
     if (!bytes) return "0 KB";
     if (bytes < 1024) return bytes + " B";
     if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + " KB";
     return (bytes / 1024 / 1024).toFixed(1) + " MB";
+  }
+
+  function withId(urlTemplate, id) {
+    if (!urlTemplate) return "";
+    return urlTemplate.replace("/0/", "/" + id + "/");
+  }
+
+  function submitPost(url, fields) {
+    if (!url) return;
+
+    const form = document.createElement("form");
+    form.method = "post";
+    form.action = url;
+    form.hidden = true;
+
+    const payload = Object.assign(
+      {
+        csrf_token: csrfToken(),
+        next: window.location.pathname + window.location.search
+      },
+      fields || {}
+    );
+
+    Object.keys(payload).forEach(function (name) {
+      if (payload[name] === undefined || payload[name] === null) return;
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = String(payload[name]);
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
   }
 
   /* -------------------------------------------------------
@@ -175,222 +207,87 @@
   }
 
   /* -------------------------------------------------------
-     Notes list (UC-02)
+     Confirmable forms
      ------------------------------------------------------- */
-  function refreshNoteCount() {
-    const list = qs("#notesList");
-    if (!list) return;
-
-    const count = list.querySelectorAll(".note-row").length;
-    const counter = qs("#noteCount");
-    const empty = qs("#emptyNotes");
-
-    if (counter) counter.textContent = String(count);
-    if (empty) empty.hidden = count !== 0;
-  }
-
-  qsa("[data-new-note]").forEach(function (button) {
-    button.addEventListener("click", function () {
-      const list = qs("#notesList");
-      const template = qs("#newNoteTemplate");
-      if (!list || !template) return;
-
-      const fragment = template.content.cloneNode(true);
-      const row = fragment.querySelector(".note-row");
-      const title = fragment.querySelector(".note-title");
-      const meta = fragment.querySelector(".note-meta");
-
-      const labels = {
-        blank: ["Nueva nota", "Sin contenido · Inbox · ahora"],
-        template: ["Nota desde plantilla", "Plantilla base · Inbox · ahora"],
-        wiki: ["Nota desde wiki-link", "Creada desde un enlace [[…]] · Inbox · ahora"]
-      };
-      const label = labels[button.dataset.newNote] || labels.blank;
-
-      if (title) title.textContent = label[0];
-      if (meta) meta.textContent = label[1];
-      if (row) row.classList.add("is-new");
-
-      list.prepend(fragment);
-      refreshNoteCount();
+  qsa("form[data-confirm]").forEach(function (form) {
+    form.addEventListener("submit", function (event) {
+      if (!window.confirm(form.dataset.confirm)) {
+        event.preventDefault();
+      }
     });
   });
 
-  refreshNoteCount();
-
   /* -------------------------------------------------------
-     Sidebar folders (UC-04)
+     Sidebar folders
      ------------------------------------------------------- */
   qsa("[data-folder-create-toggle]").forEach(function (button) {
     button.addEventListener("click", function () {
       const wrap = button.closest(".app-folder-create");
-      const form = wrap ? wrap.querySelector("[data-folder-create-form]") : null;
+      const form = wrap ? wrap.querySelector(".app-folder-form") : null;
       if (!form) return;
 
       form.classList.toggle("d-none");
       form.classList.toggle("d-flex");
 
       if (!form.classList.contains("d-none")) {
-        const input = form.querySelector("[data-folder-create-input]");
+        const input = form.querySelector('input[name="name"]');
         if (input) input.focus();
       }
     });
   });
 
-  qsa("[data-folder-create-form]").forEach(function (form) {
-    form.addEventListener("submit", function (event) {
-      event.preventDefault();
-
-      const input = form.querySelector("[data-folder-create-input]");
-      const wrap = form.closest(".app-folder-create");
-      const list = wrap ? wrap.querySelector("[data-folder-list]") : null;
-      const name = input ? input.value.trim() : "";
-
-      if (!name || !list) return;
-
-      const item = document.createElement("a");
-      item.className = "app-navitem app-navitem-indent";
-      item.href = "#";
-      item.innerHTML =
-        '<i class="bi bi-folder2"></i><span></span><span class="count">0</span>';
-      item.querySelector("span").textContent = name;
-      list.appendChild(item);
-
-      if (input) input.value = "";
-      form.classList.add("d-none");
-      form.classList.remove("d-flex");
-    });
-  });
-
-  function findFolderRow(sidebar) {
-    return qs("[data-folder-row]", sidebar);
-  }
+  const appShell = qs(".app-shell");
 
   qsa("[data-folder-action]").forEach(function (button) {
     button.addEventListener("click", function () {
-      const sidebar = button.closest(".app-sidebar-body");
-      const folderRow = sidebar ? findFolderRow(sidebar) : null;
-      if (!folderRow) return;
+      const row = button.closest("[data-folder-row]");
+      if (!row || !appShell) return;
 
+      const folderId = row.dataset.folderId;
+      const folderName = row.dataset.folderName;
       const action = button.dataset.folderAction;
 
       if (action === "subfolder") {
         const name = window.prompt("Nombre de la nueva subcarpeta", "Nueva subcarpeta");
-        if (!name) return;
+        if (!name || !name.trim()) return;
 
-        const item = document.createElement("a");
-        item.className = "app-navitem app-navitem-indent-2";
-        item.href = "#";
-        item.innerHTML =
-          '<i class="bi bi-folder2"></i><span></span><span class="count">0</span>';
-        item.querySelector("span").textContent = name.trim();
-        folderRow.insertAdjacentElement("afterend", item);
+        submitPost(appShell.dataset.createFolderUrl, {
+          name: name.trim(),
+          parent_id: folderId
+        });
       }
 
       if (action === "rename") {
-        const label = folderRow.querySelector(".app-navitem-link span");
-        const name = window.prompt(
-          "Renombrar carpeta",
-          label ? label.textContent.trim() : ""
-        );
-        if (name && label) label.textContent = name.trim();
-      }
+        const name = window.prompt("Renombrar carpeta", folderName);
+        if (!name || !name.trim() || name.trim() === folderName) return;
 
-      if (action === "move") {
-        const modal = qs("#moveNoteModal");
-        if (modal && window.bootstrap) {
-          window.bootstrap.Modal.getOrCreateInstance(modal).show();
-        } else {
-          window.alert("Elegí una nota y usá «Mover» para seleccionar esta carpeta.");
-        }
+        submitPost(withId(appShell.dataset.renameFolderUrl, folderId), {
+          name: name.trim()
+        });
       }
 
       if (action === "delete") {
-        const label = folderRow.querySelector(".app-navitem-link span");
-        const name = label ? label.textContent.trim() : "esta carpeta";
-        if (window.confirm("¿Eliminar la carpeta «" + name + "»?")) {
-          folderRow.remove();
+        if (
+          window.confirm(
+            "¿Eliminar la carpeta «" +
+              folderName +
+              "»? Sus notas se moverán a otra carpeta."
+          )
+        ) {
+          submitPost(withId(appShell.dataset.deleteFolderUrl, folderId), {});
         }
       }
     });
   });
 
-  let noteToMove = null;
+  const moveNoteForm = qs("#moveNoteForm");
   qsa("[data-move-note]").forEach(function (button) {
     button.addEventListener("click", function () {
-      noteToMove = button.closest(".note-row");
-    });
-  });
-
-  const confirmMove = qs("[data-confirm-move]");
-  if (confirmMove) {
-    confirmMove.addEventListener("click", function () {
-      const selected = qs('input[name="targetFolder"]:checked');
-      if (!noteToMove || !selected) return;
-
-      const row = noteToMove;
-      const chip = row.querySelector(".chip");
-      if (chip) chip.textContent = selected.value;
-
-      row.classList.add("is-new");
-      window.setTimeout(function () {
-        row.classList.remove("is-new");
-      }, 400);
-
-      const modal = qs("#moveNoteModal");
-      if (modal && window.bootstrap) {
-        window.bootstrap.Modal.getOrCreateInstance(modal).hide();
-      }
-    });
-  }
-
-  /* -------------------------------------------------------
-     Tags (UC-05)
-     ------------------------------------------------------- */
-  const tagColors = ["blue", "amber", "green", "red", "purple"];
-
-  qsa("[data-tag-create-form]").forEach(function (form) {
-    form.addEventListener("submit", function (event) {
-      event.preventDefault();
-
-      const input = form.querySelector("[data-tag-create-input]");
-      if (!input) return;
-
-      const name = input.value.trim().replace(/^#/, "");
-      if (!name) return;
-
-      qsa("[data-tag-list]").forEach(function (list, index) {
-        const item = document.createElement("a");
-        const color = tagColors[(name.length + index) % tagColors.length];
-
-        item.className = "app-navitem app-navitem-indent";
-        item.href = "#";
-        item.innerHTML =
-          '<span class="tag-dot ' +
-          color +
-          '"></span><span></span><span class="count">0</span>';
-        item.querySelectorAll("span")[1].textContent = name;
-        list.appendChild(item);
-      });
-
-      input.value = "";
-    });
-  });
-
-  qsa("[data-remove-tag]").forEach(function (button) {
-    button.addEventListener("click", function () {
-      const row = button.closest(".note-row");
-      const tag = button.dataset.removeTag;
-      if (!row || !tag) return;
-
-      qsa(".chip-tag", row).forEach(function (chip) {
-        if (chip.textContent.trim() === tag) chip.remove();
-      });
-
-      row.classList.add("is-removing");
-      window.setTimeout(function () {
-        row.classList.remove("is-removing");
-      }, 300);
+      if (!moveNoteForm || !appShell) return;
+      moveNoteForm.action = withId(
+        appShell.dataset.moveNoteUrl,
+        button.dataset.noteId
+      );
     });
   });
 
@@ -400,8 +297,10 @@
   const editorSource = qs("#editorSource");
   const editorPreview = qs("#editorPreview");
   const editorBody = qs("#editorBody");
+  const titleInput = qs("#noteTitle");
   const saveStatus = qs("#saveStatus");
   const wordCount = qs("#wordCount");
+  const saveUrl = titleInput ? titleInput.dataset.saveUrl : "";
   let saveTimer = null;
 
   function updateWordCount() {
@@ -422,25 +321,67 @@
     saveStatus.innerHTML = "<b>•</b> Guardando…";
   }
 
-  function markSaved() {
+  function markSaved(savedAt) {
     if (!saveStatus) return;
     saveStatus.classList.remove("chip-warn");
     saveStatus.classList.add("chip-ok");
-    saveStatus.innerHTML = "<b>✓</b> Guardado · " + currentTime();
+    saveStatus.innerHTML = "<b>✓</b> Guardado · " + (savedAt || "");
   }
 
-  if (editorSource && editorPreview) {
+  function markSaveError() {
+    if (!saveStatus) return;
+    saveStatus.classList.remove("chip-ok");
+    saveStatus.classList.add("chip-warn");
+    saveStatus.innerHTML = "<b>!</b> Error al guardar";
+  }
+
+  async function persistNote() {
+    if (!saveUrl || !editorSource) return;
+
+    markSaving();
+
+    try {
+      const response = await fetch(saveUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken()
+        },
+        body: JSON.stringify({
+          title: titleInput ? titleInput.value : "",
+          content: editorSource.value
+        })
+      });
+
+      if (!response.ok) throw new Error("save failed");
+
+      const data = await response.json();
+      markSaved(data.saved_at);
+      if (wordCount) wordCount.textContent = String(data.words);
+    } catch (error) {
+      markSaveError();
+    }
+  }
+
+  function scheduleSave() {
+    markSaving();
+    window.clearTimeout(saveTimer);
+    saveTimer = window.setTimeout(persistNote, 2000);
+  }
+
+  if (editorSource) {
     renderPreview();
     updateWordCount();
 
     editorSource.addEventListener("input", function () {
       renderPreview();
       updateWordCount();
-      markSaving();
-
-      window.clearTimeout(saveTimer);
-      saveTimer = window.setTimeout(markSaved, 2000);
+      scheduleSave();
     });
+  }
+
+  if (titleInput && saveUrl) {
+    titleInput.addEventListener("input", scheduleSave);
   }
 
   qsa("[data-view]").forEach(function (button) {
@@ -455,49 +396,33 @@
     });
   });
 
-  /* -------------------------------------------------------
-     Export / import (UC-12)
-     ------------------------------------------------------- */
-  qsa("[data-export-format]").forEach(function (button) {
-    button.addEventListener("click", function () {
-      qsa("[data-export-format]").forEach(function (other) {
-        other.classList.remove("selected");
-      });
-      button.classList.add("selected");
+  qsa("[data-copy-link]").forEach(function (button) {
+    button.addEventListener("click", async function () {
+      const original = button.innerHTML;
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        button.innerHTML = '<i class="bi bi-check2"></i> Enlace copiado';
+      } catch (error) {
+        window.prompt("Copiá el enlace de la nota:", window.location.href);
+      }
+
+      window.setTimeout(function () {
+        button.innerHTML = original;
+      }, 1600);
     });
   });
 
-  const exportButton = qs("[data-export-button]");
-  if (exportButton) {
-    exportButton.addEventListener("click", function () {
-      const selected = qs("[data-export-format].selected");
-      const format = selected ? selected.dataset.exportFormat : "markdown";
-      const original = exportButton.innerHTML;
-
-      exportButton.disabled = true;
-      exportButton.textContent = "Exportando…";
-
-      window.setTimeout(function () {
-        exportButton.disabled = false;
-        exportButton.innerHTML = original;
-
-        const list = qs("#recentExports");
-        if (!list) return;
-
-        const item = document.createElement("div");
-        item.className = "list-item";
-        item.innerHTML =
-          '<span class="nm"><b></b><span></span></span>' +
-          '<button class="btn btn-app-ghost btn-app-sm" type="button">' +
-          '<i class="bi bi-download"></i> Descargar</button>';
-
-        item.querySelector("b").textContent =
-          format === "pdf" ? "guia-rapida.pdf" : "guia-rapida.md";
-        item.querySelector(".nm span").textContent = "ahora · " + currentTime();
-        list.prepend(item);
-      }, 700);
+  /* -------------------------------------------------------
+     Export / import (UC-12)
+     ------------------------------------------------------- */
+  qsa("[data-export-format]").forEach(function (label) {
+    label.addEventListener("click", function () {
+      qsa("[data-export-format]").forEach(function (other) {
+        other.classList.remove("selected");
+      });
+      label.classList.add("selected");
     });
-  }
+  });
 
   const dropzone = qs("#importDropzone");
   const fileInput = qs("#importFiles");
@@ -513,11 +438,13 @@
       "Importar (" + count + (count === 1 ? " archivo)" : " archivos)");
   }
 
-  function addImportFiles(files) {
+  function renderImportFiles(files) {
     if (!importFileList) return;
 
-    Array.from(files)
-      .slice(0, 10 - importFileList.querySelectorAll(".list-item").length)
+    importFileList.innerHTML = "";
+
+    Array.from(files || [])
+      .slice(0, 10)
       .forEach(function (file) {
         const item = document.createElement("div");
         item.className = "list-item";
@@ -532,6 +459,24 @@
       });
 
     updateImportCount();
+  }
+
+  function setImportFiles(files) {
+    if (!fileInput) return;
+
+    try {
+      const transfer = new DataTransfer();
+      Array.from(files || [])
+        .slice(0, 10)
+        .forEach(function (file) {
+          transfer.items.add(file);
+        });
+      fileInput.files = transfer.files;
+    } catch (error) {
+      // Browsers without DataTransfer still submit files chosen with the picker.
+    }
+
+    renderImportFiles(fileInput.files);
   }
 
   if (dropzone && fileInput) {
@@ -563,33 +508,12 @@
 
     dropzone.addEventListener("drop", function (event) {
       if (event.dataTransfer && event.dataTransfer.files.length) {
-        addImportFiles(event.dataTransfer.files);
+        setImportFiles(event.dataTransfer.files);
       }
     });
 
     fileInput.addEventListener("change", function () {
-      if (fileInput.files && fileInput.files.length) {
-        addImportFiles(fileInput.files);
-      }
-      fileInput.value = "";
-    });
-  }
-
-  if (importButton) {
-    importButton.addEventListener("click", function () {
-      const count = importFileList
-        ? importFileList.querySelectorAll(".list-item").length
-        : 0;
-      if (!count) return;
-
-      const original = importButton.textContent;
-      importButton.disabled = true;
-      importButton.textContent = "Importando…";
-
-      window.setTimeout(function () {
-        importButton.disabled = false;
-        importButton.textContent = original;
-      }, 900);
+      renderImportFiles(fileInput.files);
     });
   }
 })();

@@ -2,7 +2,6 @@
 {% from "components/note_row.html" import note_row %}
 
 {% set active_nav = 'home' %}
-{% set active_tag = 'ideas' %}
 {% set show_folders = false %}
 
 {% block title %}NotaLite - Etiquetas{% endblock %}
@@ -10,66 +9,95 @@
 {% block app_content %}
     <div class="app-mainbar">
         <span class="app-mainbar-title">Etiqueta</span>
-        <span class="chip chip-tag">#ideas</span>
-        <span class="app-mainbar-sub">7 notas</span>
+        {% if active_tag %}
+            <span class="chip chip-tag">
+                <span class="tag-dot" style="--tag-color: {{ active_tag.color }}"></span>
+                #{{ active_tag.nombre }}
+            </span>
+            <span class="app-mainbar-sub">{{ notes|length }} notas</span>
+        {% else %}
+            <span class="app-mainbar-sub">Sin etiquetas</span>
+        {% endif %}
 
-        <form class="ms-auto d-flex align-items-center gap-2"
-              data-tag-create-form>
-            <input class="form-control app-input app-input-tag"
-                   type="text"
-                   placeholder="Nueva etiqueta…"
-                   aria-label="Nueva etiqueta"
-                   data-tag-create-input>
-            <button class="btn btn-app-primary btn-app-sm" type="submit">
-                <i class="bi bi-plus-lg"></i>
-                Crear
-            </button>
-        </form>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <form class="d-flex align-items-center gap-2"
+                  method="post"
+                  action="{{ url_for('notes.create_tag') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <input class="form-control app-input app-input-tag"
+                       type="text"
+                       name="name"
+                       placeholder="Nueva etiqueta…"
+                       aria-label="Nueva etiqueta">
+                <button class="btn btn-app-primary btn-app-sm" type="submit">
+                    <i class="bi bi-plus-lg"></i>
+                    Crear
+                </button>
+            </form>
+
+            {% if active_tag %}
+                <div class="dropdown">
+                    <button class="btn btn-app-ghost btn-app-sm"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Acciones de la etiqueta">
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end app-dropdown">
+                        <li>
+                            <form method="post"
+                                  action="{{ url_for('notes.delete_tag', tag_id=active_tag.id) }}"
+                                  data-confirm="¿Eliminar la etiqueta #{{ active_tag.nombre }} de todas las notas?">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="dropdown-item text-danger" type="submit">
+                                    <i class="bi bi-trash3 me-2"></i>Eliminar etiqueta
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
     </div>
 
     <div class="app-content">
-        <div class="note-list" id="tagNotes">
-            {% call note_row(
-                'Idea: micro-SaaS',
-                'Landing + demo · hace 14 min',
-                dot='blue'
-            ) %}
-                <span class="chip chip-tag">#ideas</span>
-                <span class="chip chip-tag">#urgentes</span>
-                <button class="btn btn-app-ghost btn-app-sm btn-app-danger"
-                        type="button"
-                        data-remove-tag="#ideas">
-                    Quitar
-                </button>
-            {% endcall %}
-
-            {% call note_row(
-                'Guía rápida Markdown',
-                'Encabezados, listas… · hace 1 h',
-                dot='blue'
-            ) %}
-                <span class="chip chip-tag">#ideas</span>
-                <button class="btn btn-app-ghost btn-app-sm btn-app-danger"
-                        type="button"
-                        data-remove-tag="#ideas">
-                    Quitar
-                </button>
-            {% endcall %}
-
-            {% call note_row(
-                'Recetas veganas',
-                'Hummus, curry… · ayer',
-                dot='blue'
-            ) %}
-                <span class="chip chip-tag">#ideas</span>
-                <span class="chip chip-tag">#dev</span>
-                <button class="btn btn-app-ghost btn-app-sm btn-app-danger"
-                        type="button"
-                        data-remove-tag="#ideas">
-                    Quitar
-                </button>
-            {% endcall %}
-        </div>
+        {% if active_tag and notes %}
+            <div class="note-list">
+                {% for note in notes %}
+                    {% call note_row(
+                        note.title,
+                        note.directory.name ~ ' · ' ~ (note.modified_at|timeago),
+                        dot='blue',
+                        href=url_for('notes.edit_note', note_id=note.id)
+                    ) %}
+                        {% for tag in note.tags %}
+                            <a class="chip chip-tag"
+                               href="{{ url_for('notes.tags', tag_id=tag.id) }}">
+                                <span class="tag-dot" style="--tag-color: {{ tag.color }}"></span>
+                                #{{ tag.nombre }}
+                            </a>
+                        {% endfor %}
+                        <form method="post"
+                              action="{{ url_for('notes.remove_note_tag', note_id=note.id, tag_id=active_tag.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button class="btn btn-app-ghost btn-app-sm btn-app-danger"
+                                    type="submit">
+                                Quitar
+                            </button>
+                        </form>
+                    {% endcall %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="app-empty-hint">
+                <i class="bi bi-tags"></i>
+                <b>{% if active_tag %}No hay notas con esta etiqueta{% else %}No hay etiquetas todavía{% endif %}</b>
+                <span>{% if active_tag %}Asignala desde el editor de una nota.{% else %}Creá una etiqueta con el formulario de arriba.{% endif %}</span>
+            </div>
+        {% endif %}
 
         <div class="app-hint app-hint-box">
             <b>Nota:</b> eliminar una etiqueta la quita de todas las notas.

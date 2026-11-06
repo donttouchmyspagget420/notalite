@@ -2,75 +2,67 @@
 {% from "components/note_row.html" import note_row %}
 
 {% set active_nav = 'home' %}
-{% set active_folder = 'Trabajo' %}
 {% set folder_create_open = true %}
 {% set show_tags = false %}
 
-{% block title %}NotaLite - Carpetas{% endblock %}
+{% block title %}NotaLite - {{ active_directory.name }}{% endblock %}
 
 {% block app_content %}
     <div class="app-mainbar">
-        <span class="app-mainbar-title">Trabajo</span>
-        <span class="app-mainbar-sub">4 notas</span>
+        <span class="app-mainbar-title">{{ active_directory.name }}</span>
+        <span class="app-mainbar-sub">{{ notes|length }} notas</span>
 
         <div class="ms-auto">
-            <button class="btn btn-app" type="button">
-                <i class="bi bi-plus-lg"></i>
-                Nueva nota aquí
-            </button>
+            <form method="post" action="{{ url_for('notes.create_note') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="directory_id" value="{{ active_directory.id }}">
+                <input type="hidden" name="mode" value="blank">
+                <button class="btn btn-app" type="submit">
+                    <i class="bi bi-plus-lg"></i>
+                    Nueva nota aquí
+                </button>
+            </form>
         </div>
     </div>
 
     <div class="app-content">
-        <div class="note-list">
-            {% call note_row(
-                'Reunión sprint 12',
-                'Actas · hace 2 h',
-                folder_icon=true
-            ) %}
-                <span class="chip">Proyecto X</span>
-                <button class="btn btn-app-ghost btn-app-sm note-move"
-                        type="button"
-                        data-bs-toggle="modal"
-                        data-bs-target="#moveNoteModal"
-                        data-move-note>
-                    Mover
-                </button>
-            {% endcall %}
-
-            {% call note_row(
-                'Guía rápida Markdown',
-                'Docs · hace 1 h',
-                folder_icon=true
-            ) %}
-                <span class="chip">Trabajo</span>
-                <button class="btn btn-app-ghost btn-app-sm note-move"
-                        type="button"
-                        data-bs-toggle="modal"
-                        data-bs-target="#moveNoteModal"
-                        data-move-note>
-                    Mover
-                </button>
-            {% endcall %}
-
-            {% call note_row(
-                'Roadmap Q3',
-                'Plan · hace 3 d',
-                folder_icon=true
-            ) %}
-                <span class="chip">Proyecto Y</span>
-                <button class="btn btn-app-ghost btn-app-sm note-move"
-                        type="button"
-                        data-bs-toggle="modal"
-                        data-bs-target="#moveNoteModal"
-                        data-move-note>
-                    Mover
-                </button>
-            {% endcall %}
-        </div>
+        {% if notes %}
+            <div class="note-list">
+                {% for note in notes %}
+                    {% call note_row(
+                        note.title,
+                        note.name ~ ' · ' ~ (note.modified_at|timeago),
+                        folder_icon=true,
+                        time=note.modified_at|timeago,
+                        href=url_for('notes.edit_note', note_id=note.id)
+                    ) %}
+                        {% for tag in note.tags %}
+                            <a class="chip chip-tag"
+                               href="{{ url_for('notes.tags', tag_id=tag.id) }}">
+                                #{{ tag.nombre }}
+                            </a>
+                        {% endfor %}
+                        <button class="btn btn-app-ghost btn-app-sm note-move"
+                                type="button"
+                                data-bs-toggle="modal"
+                                data-bs-target="#moveNoteModal"
+                                data-move-note
+                                data-note-id="{{ note.id }}">
+                            Mover
+                        </button>
+                    {% endcall %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="app-empty-hint">
+                <i class="bi bi-folder2-open"></i>
+                <b>Esta carpeta está vacía</b>
+                <span>Creá una nota acá o mové una existente.</span>
+            </div>
+        {% endif %}
 
         <div class="app-hint mt-4">
-            Las subcarpetas se crean con «Nueva subcarpeta» y las notas se mueven con «Mover».
+            Las subcarpetas se crean desde el menú «⋯» de cada carpeta y las notas se mueven con «Mover».
         </div>
     </div>
 
@@ -80,7 +72,12 @@
          aria-labelledby="moveNoteModalLabel"
          aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content app-modal">
+            <form class="modal-content app-modal"
+                  id="moveNoteForm"
+                  method="post"
+                  action="{{ url_for('notes.move_note', note_id=notes[0].id if notes else 0) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="next" value="{{ request.path }}">
                 <div class="modal-header">
                     <h5 class="modal-title fs-6" id="moveNoteModalLabel">Mover nota</h5>
                     <button type="button"
@@ -91,33 +88,24 @@
                 <div class="modal-body">
                     <p class="app-modal-text">Elegí la carpeta de destino.</p>
                     <div class="folder-picker">
-                        <label class="folder-picker-item">
-                            <input class="form-check-input" type="radio" name="targetFolder" value="Inbox">
-                            <span><i class="bi bi-folder2"></i> Inbox</span>
-                        </label>
-                        <label class="folder-picker-item">
-                            <input class="form-check-input" type="radio" name="targetFolder" value="Trabajo" checked>
-                            <span><i class="bi bi-folder2"></i> Trabajo</span>
-                        </label>
-                        <label class="folder-picker-item">
-                            <input class="form-check-input" type="radio" name="targetFolder" value="Proyecto X">
-                            <span><i class="bi bi-folder2"></i> Proyecto X</span>
-                        </label>
-                        <label class="folder-picker-item">
-                            <input class="form-check-input" type="radio" name="targetFolder" value="Proyecto Y">
-                            <span><i class="bi bi-folder2"></i> Proyecto Y</span>
-                        </label>
-                        <label class="folder-picker-item">
-                            <input class="form-check-input" type="radio" name="targetFolder" value="Personal">
-                            <span><i class="bi bi-folder2"></i> Personal</span>
-                        </label>
+                        {% for directory in sidebar_directories %}
+                            <label class="folder-picker-item">
+                                <input class="form-check-input"
+                                       type="radio"
+                                       name="directory_id"
+                                       value="{{ directory.id }}"
+                                       {% if directory.id == active_directory.id %}checked{% endif %}
+                                       required>
+                                <span><i class="bi bi-folder2"></i> {{ directory.name }}</span>
+                            </label>
+                        {% endfor %}
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-app-ghost" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-app-primary" data-confirm-move>Mover nota</button>
+                    <button type="submit" class="btn btn-app-primary">Mover nota</button>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 {% endblock %}

@@ -7,7 +7,8 @@
     tag=None,
     status=None,
     time=None,
-    folder_icon=false) %}
+    folder_icon=false,
+    href='#') %}
     <div class="note-row">
         {% if avatar %}
             <span class="avatar {{ avatar_class }}">{{ avatar }}</span>
@@ -18,7 +19,7 @@
         {% endif %}
 
         <div class="note-row-body">
-            <a class="note-title" href="#">{{ title }}</a>
+            <a class="note-title" href="{{ href }}">{{ title }}</a>
             <span class="note-meta">{{ meta|safe }}</span>
         </div>
 

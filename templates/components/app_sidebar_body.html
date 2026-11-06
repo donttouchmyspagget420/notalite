@@ -1,22 +1,86 @@
+{% macro directory_item(node, depth, active_dir, note_counts) %}
+    {% if depth == 1 %}
+        {% set indent_class = 'app-navitem-indent' %}
+    {% elif depth == 2 %}
+        {% set indent_class = 'app-navitem-indent-2' %}
+    {% elif depth >= 3 %}
+        {% set indent_class = 'app-navitem-indent-3' %}
+    {% else %}
+        {% set indent_class = '' %}
+    {% endif %}
+    <div class="app-navitem {{ 'active' if active_dir and active_dir.id == node.id }}"
+         data-folder-row
+         data-folder-id="{{ node.id }}"
+         data-folder-name="{{ node.name }}"
+         data-folder-url="{{ url_for('notes.folders', directory_id=node.id) }}">
+        <a class="app-navitem-link {{ indent_class }}"
+           href="{{ url_for('notes.folders', directory_id=node.id) }}">
+            <i class="bi bi-chevron-right app-arrow"></i>
+            <i class="bi bi-folder2"></i>
+            <span>{{ node.name }}</span>
+        </a>
+        <span class="count">{{ note_counts.get(node.id, 0) }}</span>
+        <div class="dropdown">
+            <button class="app-navitem-more"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    data-bs-strategy="fixed"
+                    aria-expanded="false"
+                    aria-label="Acciones de la carpeta {{ node.name }}">
+                <i class="bi bi-three-dots"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end app-dropdown">
+                <li>
+                    <button class="dropdown-item" type="button" data-folder-action="subfolder">
+                        <i class="bi bi-folder-plus me-2"></i>Nueva subcarpeta
+                    </button>
+                </li>
+                <li>
+                    <button class="dropdown-item" type="button" data-folder-action="rename">
+                        <i class="bi bi-pencil me-2"></i>Renombrar
+                    </button>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('notes.folders', directory_id=node.id) }}">
+                        <i class="bi bi-folder2-open me-2"></i>Abrir carpeta
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <button class="dropdown-item text-danger" type="button" data-folder-action="delete">
+                        <i class="bi bi-trash3 me-2"></i>Eliminar carpeta
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    {% for child in node.children|sort(attribute='name') %}
+        {{ directory_item(child, depth + 1, active_dir, note_counts) }}
+    {% endfor %}
+{% endmacro %}
+
 {% macro sidebar_body() %}
     {% set current_nav = active_nav|default('home') %}
-    {% set current_folder = active_folder|default('') %}
-    {% set current_tag = active_tag|default('') %}
+    {% set current_tag = active_tag|default(none) %}
     {% set folders_visible = show_folders|default(true) %}
     {% set tags_visible = show_tags|default(true) %}
     <div class="app-sidebar-body">
-        <a class="app-brand" href="{{ url_for("main.root") }}">
+        <a class="app-brand"
+           href="{{ url_for('notes.list_notes') }}">
             <img width="18"
                  height="18"
                  src="{{ url_for('static', filename='imgs/logo.png') }}"
                  alt="">
             <span>NotaLite</span>
         </a>
+
         <nav class="app-nav" aria-label="Navegación principal">
-            <a class="app-navitem {{ 'active' if current_nav == 'home' }}" href="#">
+            <a class="app-navitem {{ 'active' if current_nav == 'home' }}"
+               href="{{ url_for('notes.list_notes') }}">
                 <i class="bi bi-house"></i>
                 <span>Inicio</span>
-                <span class="count">15</span>
+                <span class="count">{{ total_notes|default(0) }}</span>
             </a>
             <a class="app-navitem {{ 'active' if current_nav == 'search' }}"
                href="#">
@@ -24,76 +88,16 @@
                 <span>Buscar</span>
                 <span class="count">⌘K</span>
             </a>
+
             {% if folders_visible %}
                 <div class="app-section-label">Carpetas</div>
-                <a class="app-navitem {{ 'active' if current_nav == 'inbox' }}" href="#">
-                    <i class="bi bi-chevron-down app-arrow"></i>
-                    <i class="bi bi-folder2"></i>
-                    <span>Inbox</span>
-                    <span class="count">3</span>
-                </a>
-                <div class="app-navitem {{ 'active' if current_folder == 'Trabajo' }}"
-                     data-folder-row>
-                    <a class="app-navitem-link" href="#">
-                        <i class="bi bi-chevron-down app-arrow"></i>
-                        <i class="bi bi-folder2"></i>
-                        <span>Trabajo</span>
-                    </a>
-                    <span class="count">4</span>
-                    <div class="dropdown">
-                        <button class="app-navitem-more"
-                                type="button"
-                                data-bs-toggle="dropdown"
-                                data-bs-strategy="fixed"
-                                aria-expanded="false"
-                                aria-label="Acciones de la carpeta Trabajo">
-                            <i class="bi bi-three-dots"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end app-dropdown">
-                            <li>
-                                <button class="dropdown-item" type="button" data-folder-action="subfolder">
-                                    <i class="bi bi-folder-plus me-2"></i>Nueva subcarpeta
-                                </button>
-                            </li>
-                            <li>
-                                <button class="dropdown-item" type="button" data-folder-action="rename">
-                                    <i class="bi bi-pencil me-2"></i>Renombrar
-                                </button>
-                            </li>
-                            <li>
-                                <button class="dropdown-item" type="button" data-folder-action="move">
-                                    <i class="bi bi-arrow-right-square me-2"></i>Mover notas aquí
-                                </button>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li>
-                                <button class="dropdown-item text-danger"
-                                        type="button"
-                                        data-folder-action="delete">
-                                    <i class="bi bi-trash3 me-2"></i>Eliminar carpeta
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                <a class="app-navitem app-navitem-indent-2" href="#">
-                    <i class="bi bi-folder2"></i>
-                    <span>Proyecto X</span>
-                    <span class="count">2</span>
-                </a>
-                <a class="app-navitem app-navitem-indent-2" href="#">
-                    <i class="bi bi-folder2"></i>
-                    <span>Proyecto Y</span>
-                    <span class="count">1</span>
-                </a>
-                <a class="app-navitem {{ 'active' if current_folder == 'Personal' }}"
-                   href="#">
-                    <i class="bi bi-folder2"></i>
-                    <span>Personal</span>
-                    <span class="count">5</span>
-                </a>
+
+                {% for root in directory_roots|default([]) %}
+                    {{ directory_item(root, 0, active_directory|default(none), directory_note_counts|default({})) }}
+                {% else %}
+                    <div class="app-sidebar-empty">Todavía no hay carpetas.</div>
+                {% endfor %}
+
                 <div class="app-folder-create">
                     <button class="btn btn-app-ghost btn-app-sm app-folder-toggle"
                             type="button"
@@ -102,35 +106,47 @@
                         Nueva carpeta
                     </button>
                     <form class="app-folder-form {{ 'd-flex' if folder_create_open|default(false) else 'd-none' }}"
-                          data-folder-create-form>
+                          method="post"
+                          action="{{ url_for('notes.create_folder') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="next" value="{{ request.path }}">
                         <input class="form-control app-input app-input-sm"
                                type="text"
+                               name="name"
                                placeholder="Nueva carpeta…"
                                aria-label="Nombre de la nueva carpeta"
-                               data-folder-create-input>
+                               required>
                         <button class="btn btn-app-primary btn-app-sm" type="submit">Crear</button>
                     </form>
-                    <div data-folder-list></div>
                 </div>
             {% endif %}
+
             {% if tags_visible %}
                 <div class="app-section-label">Etiquetas</div>
-                {{ tags = select(Tag) }}
-                {% for tag in tags %}
-                    {% include "tag.html" %}
+
+                {% for tag, count in sidebar_tags|default([]) %}
+                    <a class="app-navitem app-navitem-indent {{ 'active' if current_tag and current_tag.id == tag.id }}"
+                       href="{{ url_for('notes.tags', tag_id=tag.id) }}">
+                        <span class="tag-dot" style="--tag-color: {{ tag.color }}"></span>
+                        <span>{{ tag.nombre }}</span>
+                        <span class="count">{{ count }}</span>
+                    </a>
+                {% else %}
+                    <div class="app-sidebar-empty">Todavía no hay etiquetas.</div>
                 {% endfor %}
-                <div data-tag-list></div>
             {% endif %}
         </nav>
+
         <div class="app-sidebar-footer">
-            <img class="avatar"
-                 src="{{ session["avatar"] }}"
-                 referrerpolicy="no-referrer"></img>
+            <span class="avatar a1">{{ user_initials|default('?') }}</span>
             <div class="who">
-                <b>{{ session["name"] }}</b>
-                <span>{{ session["email"] }}</span>
+                <b>{{ current_user.name }}</b>
+                <span>{{ current_user.email }}</span>
             </div>
-            <a class="app-icon-btn" href="#" title="Ajustes" aria-label="Ajustes">
+            <a class="app-icon-btn"
+               href="{{ url_for('notes.import_export') }}"
+               title="Importar / Exportar"
+               aria-label="Importar / Exportar">
                 <i class="bi bi-gear"></i>
             </a>
         </div>

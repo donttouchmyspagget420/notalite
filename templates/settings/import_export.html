@@ -7,52 +7,75 @@
     <div class="settings-grid">
         <section class="settings-card">
             <b class="settings-card-title">Exportar nota</b>
-            <p class="settings-card-sub">Convierte la nota actual a un archivo.</p>
+            <p class="settings-card-sub">Convierte una nota de tu cuenta a un archivo.</p>
 
-            <div class="export-options">
-                <button class="export-option selected"
-                        type="button"
-                        data-export-format="markdown">
-                    <b>Markdown</b>
-                    <span>.md · conserva todo</span>
-                </button>
-                <button class="export-option"
-                        type="button"
-                        data-export-format="pdf">
-                    <b>PDF</b>
-                    <span>ideal para imprimir</span>
-                </button>
-            </div>
+            <form method="post" action="{{ url_for('notes.export_selected') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <button class="btn btn-app-primary w-100 justify-content-center"
-                    type="button"
-                    data-export-button>
-                Exportar nota
-            </button>
+                <label class="settings-label" for="exportNote">Nota</label>
+                <select class="form-select app-input settings-select"
+                        id="exportNote"
+                        name="note_id"
+                        {% if not notes %}disabled{% endif %}
+                        required>
+                    {% for note in notes %}
+                        <option value="{{ note.id }}"
+                                {% if active_note and note.id == active_note.id %}selected{% endif %}>
+                            {{ note.title }}
+                        </option>
+                    {% else %}
+                        <option value="">No hay notas para exportar</option>
+                    {% endfor %}
+                </select>
+
+                <div class="export-options mt-3">
+                    <label class="export-option selected" data-export-format="md">
+                        <input class="visually-hidden"
+                               type="radio"
+                               name="format"
+                               value="md"
+                               checked>
+                        <b>Markdown</b>
+                        <span>.md · conserva todo</span>
+                    </label>
+                    <label class="export-option" data-export-format="pdf">
+                        <input class="visually-hidden"
+                               type="radio"
+                               name="format"
+                               value="pdf">
+                        <b>PDF</b>
+                        <span>ideal para imprimir</span>
+                    </label>
+                </div>
+
+                <button class="btn btn-app-primary w-100 justify-content-center"
+                        type="submit"
+                        {% if not notes %}disabled{% endif %}>
+                    Exportar nota
+                </button>
+            </form>
 
             <div class="settings-block">
-                <div class="settings-label">Exportaciones recientes</div>
+                <div class="settings-label">Notas recientes</div>
                 <div id="recentExports">
-                    <div class="list-item">
-                        <span class="nm">
-                            <b>guia-markdown.md</b>
-                            <span>hoy · 12:20</span>
-                        </span>
-                        <button class="btn btn-app-ghost btn-app-sm" type="button">
-                            <i class="bi bi-download"></i>
-                            Descargar
-                        </button>
-                    </div>
-                    <div class="list-item">
-                        <span class="nm">
-                            <b>guia-markdown.pdf</b>
-                            <span>hace 5 d</span>
-                        </span>
-                        <button class="btn btn-app-ghost btn-app-sm" type="button">
-                            <i class="bi bi-download"></i>
-                            Descargar
-                        </button>
-                    </div>
+                    {% for note in notes[:5] %}
+                        <div class="list-item">
+                            <span class="nm">
+                                <b>{{ note.title }}</b>
+                                <span>modificada {{ note.modified_at|timeago }}</span>
+                            </span>
+                            <a class="btn btn-app-ghost btn-app-sm"
+                               href="{{ url_for('notes.export_note', note_id=note.id, export_format='md') }}">
+                                <i class="bi bi-download"></i> .md
+                            </a>
+                            <a class="btn btn-app-ghost btn-app-sm"
+                               href="{{ url_for('notes.export_note', note_id=note.id, export_format='pdf') }}">
+                                <i class="bi bi-file-earmark-pdf"></i> .pdf
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="app-hint">Todavía no tenés notas.</div>
+                    {% endfor %}
                 </div>
             </div>
         </section>
@@ -61,52 +84,48 @@
             <b class="settings-card-title">Importar .md</b>
             <p class="settings-card-sub">Los archivos se convierten en notas nuevas.</p>
 
-            <div class="dropzone"
-                 id="importDropzone"
-                 role="button"
-                 tabindex="0"
-                 aria-label="Arrastrar o elegir archivos Markdown">
-                <i class="bi bi-upload dropzone-icon"></i>
-                <div>
-                    Arrastrá archivos .md aquí o <b>elegí archivos</b>
-                </div>
-                <span class="dropzone-hint">máx. 10 archivos · hasta 25 MB c/u</span>
-                <input id="importFiles"
-                       type="file"
-                       accept=".md,text/markdown"
-                       multiple
-                       hidden>
-            </div>
+            <form id="importForm"
+                  method="post"
+                  action="{{ url_for('notes.import_notes') }}"
+                  enctype="multipart/form-data"
+                  class="d-flex flex-column flex-grow-1">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <div class="import-list" id="importFileList">
-                <div class="list-item">
-                    <span class="nm">
-                        <b>notas-finales.md</b>
-                        <span>18 KB · listo</span>
-                    </span>
-                    <span class="chip chip-ok">✓</span>
-                </div>
-                <div class="list-item">
-                    <span class="nm">
-                        <b>diario-2024.md</b>
-                        <span>42 KB · listo</span>
-                    </span>
-                    <span class="chip chip-ok">✓</span>
-                </div>
-                <div class="list-item">
-                    <span class="nm">
-                        <b>ideas-apps.md</b>
-                        <span>9 KB · duplicado</span>
-                    </span>
-                    <span class="chip chip-warn">saltar</span>
-                </div>
-            </div>
+                <label class="settings-label" for="importDirectory">Carpeta destino</label>
+                <select class="form-select app-input settings-select"
+                        id="importDirectory"
+                        name="directory_id">
+                    {% for directory in sidebar_directories %}
+                        <option value="{{ directory.id }}">{{ directory.name }}</option>
+                    {% endfor %}
+                </select>
 
-            <button class="btn btn-app-primary w-100 justify-content-center mt-auto"
-                    type="button"
-                    data-import-button>
-                Importar (3 archivos)
-            </button>
+                <div class="dropzone mt-3"
+                     id="importDropzone"
+                     role="button"
+                     tabindex="0"
+                     aria-label="Arrastrar o elegir archivos Markdown">
+                    <i class="bi bi-upload dropzone-icon"></i>
+                    <div>
+                        Arrastrá archivos .md aquí o <b>elegí archivos</b>
+                    </div>
+                    <span class="dropzone-hint">máx. 10 archivos · hasta 25 MB c/u</span>
+                    <input id="importFiles"
+                           type="file"
+                           name="files"
+                           accept=".md,text/markdown"
+                           multiple
+                           hidden>
+                </div>
+
+                <div class="import-list" id="importFileList"></div>
+
+                <button class="btn btn-app-primary w-100 justify-content-center mt-auto"
+                        type="submit"
+                        data-import-button>
+                    Importar (0 archivos)
+                </button>
+            </form>
         </section>
     </div>
 {% endblock %}

@@ -28,7 +28,7 @@ class User(db.Model,UserMixin):
     # nullable por gente que usa google id
     password = db.Column(db.String(255), nullable = True)
     avatar = db.Column(db.String(255))
-    timestamp = db.Column(db.DateTime(timezone = True), default = utcnow())
+    timestamp = db.Column(db.DateTime(timezone = True), default = utcnow)
     role_id = db.Column(db.Integer, db.ForeignKey("roles.id"), nullable = False)
 
     role = db.relationship("Role", back_populates = "users")
@@ -43,7 +43,7 @@ class Pending(db.Model):
     email = db.Column(db.String(255), primary_key = True)
     password = db.Column(db.String(255), nullable = False)
     code = db.Column(db.String(255), nullable = False)
-    expires_at = db.Column(db.DateTime(timezone = True), default = utcnow() + timedelta(hours=24))
+    expires_at = db.Column(db.DateTime(timezone = True), default = lambda: utcnow() + timedelta(hours=24))
     role_id = db.Column(db.Integer, db.ForeignKey("roles.id"), nullable = False)
 
     role = db.relationship("Role", back_populates = "pendings")
@@ -63,6 +63,12 @@ class Directory(db.Model):
     
     notes = db.relationship("Note", back_populates="directory")  # Added missing relationship
 
+note_tags = db.Table(
+    "note_tags",
+    db.Column("note_id", db.Integer, db.ForeignKey("notes.id", ondelete="CASCADE"), primary_key=True),
+    db.Column("tag_id", db.Integer, db.ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True),
+)
+
 class Note(db.Model):
     __tablename__ = 'notes'
 
@@ -70,8 +76,8 @@ class Note(db.Model):
     title = db.Column(db.String(255), nullable = False)
     name = db.Column(db.String(100), nullable = False)
     content = db.Column(db.Text, nullable = False)
-    created_at = db.Column(db.DateTime(timezone = True), default = utcnow())
-    modified_at = db.Column(db.DateTime(timezone = True), default = utcnow())
+    created_at = db.Column(db.DateTime(timezone = True), default = utcnow)
+    modified_at = db.Column(db.DateTime(timezone = True), default = utcnow)
     deleted_at = db.Column(db.DateTime(timezone = True))
     to_delete = db.Column(db.Boolean, default = False)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
@@ -80,6 +86,7 @@ class Note(db.Model):
     user = db.relationship("User", back_populates = "notes")
     directory = db.relationship("Directory", back_populates = "notes")
     collabs = db.relationship("Collab", back_populates="note")
+    tags = db.relationship("Tag", secondary=note_tags, back_populates="notes", lazy="select")
 
 class Collab(db.Model):
     __tablename__ = 'collabs'
@@ -98,5 +105,7 @@ class Tag(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     nombre = db.Column(db.String(100), nullable = False)
     color = db.Column(db.String(7), nullable = False) #color en hex como: #ffffff
+
+    notes = db.relationship("Note", secondary=note_tags, back_populates="tags", lazy="select")
 
 
