@@ -1,0 +1,30 @@
+{# Reusable note row. Extra actions can be passed with a {% call %} block. #}
+{% macro note_row(title,
+    meta,
+    avatar=None,
+    avatar_class='a1',
+    dot=None,
+    tag=None,
+    status=None,
+    time=None,
+    folder_icon=false) %}
+    <div class="note-row">
+        {% if avatar %}
+            <span class="avatar {{ avatar_class }}">{{ avatar }}</span>
+        {% elif dot %}
+            <span class="tag-dot {{ dot }}"></span>
+        {% elif folder_icon %}
+            <i class="bi bi-folder2 note-row-folder"></i>
+        {% endif %}
+
+        <div class="note-row-body">
+            <a class="note-title" href="#">{{ title }}</a>
+            <span class="note-meta">{{ meta|safe }}</span>
+        </div>
+
+        {% if tag %}<span class="chip chip-tag">{{ tag }}</span>{% endif %}
+        {% if status %}<span class="chip {{ status.class }}">{{ status.text }}</span>{% endif %}
+        {% if time %}<span class="note-time">{{ time }}</span>{% endif %}
+        {% if caller is defined %}{{ caller() }}{% endif %}
+    </div>
+{% endmacro %}

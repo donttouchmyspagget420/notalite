@@ -1,0 +1,26 @@
+{% extends "layouts/template.html" %}
+
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block body_class %}app-body app-body-plain{% endblock %}
+
+{% block content %}
+    <div class="app-plain">
+        <header class="app-plain-header">
+            <a class="app-brand app-brand-sm"
+               href="{{ url_for('main.root') }}">
+                <img width="18"
+                     height="18"
+                     src="{{ url_for('static', filename='imgs/logo.png') }}"
+                     alt="">
+                <span>NotaLite</span>
+            </a>
+            <span class="app-plain-sep">/</span>
+            <span class="app-plain-title">{% block app_section %}Ajustes{% endblock %}</span>
+        </header>
+
+        <main class="app-plain-content">
+            {% block app_content %}{% endblock %}
+        </main>
+    </div>
+{% endblock %}

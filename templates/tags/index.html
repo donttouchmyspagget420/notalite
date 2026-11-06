@@ -1,0 +1,78 @@
+{% extends "layouts/app.html" %}
+{% from "components/note_row.html" import note_row %}
+
+{% set active_nav = 'home' %}
+{% set active_tag = 'ideas' %}
+{% set show_folders = false %}
+
+{% block title %}NotaLite - Etiquetas{% endblock %}
+
+{% block app_content %}
+    <div class="app-mainbar">
+        <span class="app-mainbar-title">Etiqueta</span>
+        <span class="chip chip-tag">#ideas</span>
+        <span class="app-mainbar-sub">7 notas</span>
+
+        <form class="ms-auto d-flex align-items-center gap-2"
+              data-tag-create-form>
+            <input class="form-control app-input app-input-tag"
+                   type="text"
+                   placeholder="Nueva etiqueta…"
+                   aria-label="Nueva etiqueta"
+                   data-tag-create-input>
+            <button class="btn btn-app-primary btn-app-sm" type="submit">
+                <i class="bi bi-plus-lg"></i>
+                Crear
+            </button>
+        </form>
+    </div>
+
+    <div class="app-content">
+        <div class="note-list" id="tagNotes">
+            {% call note_row(
+                'Idea: micro-SaaS',
+                'Landing + demo · hace 14 min',
+                dot='blue'
+            ) %}
+                <span class="chip chip-tag">#ideas</span>
+                <span class="chip chip-tag">#urgentes</span>
+                <button class="btn btn-app-ghost btn-app-sm btn-app-danger"
+                        type="button"
+                        data-remove-tag="#ideas">
+                    Quitar
+                </button>
+            {% endcall %}
+
+            {% call note_row(
+                'Guía rápida Markdown',
+                'Encabezados, listas… · hace 1 h',
+                dot='blue'
+            ) %}
+                <span class="chip chip-tag">#ideas</span>
+                <button class="btn btn-app-ghost btn-app-sm btn-app-danger"
+                        type="button"
+                        data-remove-tag="#ideas">
+                    Quitar
+                </button>
+            {% endcall %}
+
+            {% call note_row(
+                'Recetas veganas',
+                'Hummus, curry… · ayer',
+                dot='blue'
+            ) %}
+                <span class="chip chip-tag">#ideas</span>
+                <span class="chip chip-tag">#dev</span>
+                <button class="btn btn-app-ghost btn-app-sm btn-app-danger"
+                        type="button"
+                        data-remove-tag="#ideas">
+                    Quitar
+                </button>
+            {% endcall %}
+        </div>
+
+        <div class="app-hint app-hint-box">
+            <b>Nota:</b> eliminar una etiqueta la quita de todas las notas.
+        </div>
+    </div>
+{% endblock %}

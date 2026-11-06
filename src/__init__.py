@@ -34,9 +34,11 @@ def create_app(config_object=Config):
 
     from src.auth import bp as auth_bp
     from src.main import bp as main_bp
+    from src.notes import bp as notes_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix="/auth")
+    app.register_blueprint(notes_bp, url_prefix="/notes")
 
     from src import cli
 

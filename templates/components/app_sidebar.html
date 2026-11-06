@@ -1,0 +1,21 @@
+{% from "components/app_sidebar_body.html" import sidebar_body with context %}
+
+<aside class="app-sidebar d-none d-lg-flex">
+    {{ sidebar_body() }}
+</aside>
+
+<div class="offcanvas offcanvas-start app-offcanvas"
+     tabindex="-1"
+     id="appSidebar"
+     aria-labelledby="appSidebarLabel">
+    <div class="offcanvas-header app-offcanvas-header">
+        <span class="app-offcanvas-title" id="appSidebarLabel">Menú</span>
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="offcanvas"
+                aria-label="Cerrar"></button>
+    </div>
+    <div class="offcanvas-body app-offcanvas-body">
+        {{ sidebar_body() }}
+    </div>
+</div>

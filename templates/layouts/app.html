@@ -1,0 +1,34 @@
+{% extends "layouts/template.html" %}
+
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block body_class %}app-body{% endblock %}
+
+{% block content %}
+    <div class="app-shell">
+        {% include "components/app_sidebar.html" %}
+
+        <div class="app-main">
+            <div class="app-mobilebar d-lg-none">
+                <button class="btn btn-app-ghost btn-app-sm"
+                        type="button"
+                        data-bs-toggle="offcanvas"
+                        data-bs-target="#appSidebar"
+                        aria-controls="appSidebar"
+                        aria-label="Abrir menú">
+                    <i class="bi bi-list fs-5"></i>
+                </button>
+                <a class="app-brand app-brand-sm"
+                   href="{{ url_for('main.root') }}">
+                    <img width="18"
+                         height="18"
+                         src="{{ url_for('static', filename='imgs/logo.png') }}"
+                         alt="">
+                    <span>NotaLite</span>
+                </a>
+            </div>
+
+            {% block app_content %}{% endblock %}
+        </div>
+    </div>
+{% endblock %}

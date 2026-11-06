@@ -1,0 +1,88 @@
+{% extends "layouts/app.html" %}
+{% from "components/note_row.html" import note_row %}
+{% set active_nav = "home" %}
+{% block title %}NotaLite - Inicio{% endblock %}
+{% block app_content %}
+    <div class="app-mainbar">
+        <span class="app-mainbar-title">Inicio</span>
+        <span class="app-mainbar-sub"><span id="noteCount">4</span> notas</span>
+        <div class="ms-auto dropdown">
+            <button class="btn btn-app-primary"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                <i class="bi bi-plus-lg"></i>
+                Nueva nota
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end app-dropdown">
+                <li>
+                    <button class="dropdown-item" type="button" data-new-note="blank">
+                        <i class="bi bi-file-earmark-plus me-2"></i>Nota en blanco
+                    </button>
+                </li>
+                <li>
+                    <button class="dropdown-item" type="button" data-new-note="template">
+                        <i class="bi bi-file-earmark-text me-2"></i>Desde plantilla
+                    </button>
+                </li>
+                <li>
+                    <button class="dropdown-item" type="button" data-new-note="wiki">
+                        <i class="bi bi-link-45deg me-2"></i>Nota desde [[wiki-link]]
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="app-content">
+        <div class="note-list" id="notesList">
+            {{ note_row(
+                'Guía rápida Markdown',
+                'Encabezados, listas, tablas y [[wiki-links]] · Trabajo · <mark>editada</mark> hoy',
+                avatar='M',
+                avatar_class='a3',
+                tag='#ideas',
+                time='hace 1 h'
+            ) }}
+            {{ note_row(
+                'Idea: micro-SaaS',
+                'Landing + demo del producto · Personal · hace 14 min',
+                avatar='L',
+                avatar_class='a2',
+                tag='#urgentes',
+                time='hace 14 min'
+            ) }}
+            {{ note_row(
+                'Reunión sprint 12',
+                'Objetivos, incidencias y decisiones · Proyecto X · hace 2 h',
+                avatar='V',
+                avatar_class='a5',
+                status={'class': 'chip-ok', 'text': 'compartida'},
+                time='hace 2 h'
+            ) }}
+            {{ note_row(
+                'Recetas veganas',
+                'Hummus, curry de garbanzos … · Personal · ayer',
+                avatar='R',
+                avatar_class='a4',
+                tag='#ideas',
+                time='ayer'
+            ) }}
+        </div>
+        <div class="app-empty-hint" id="emptyNotes" hidden>
+            <i class="bi bi-journal-plus"></i>
+            <b>No hay notas todavía</b>
+            <span>Creá tu primera nota desde el botón «Nueva nota».</span>
+        </div>
+    </div>
+    <template id="newNoteTemplate">
+        <div class="note-row">
+            <span class="avatar a1">N</span>
+            <div class="note-row-body">
+                <a class="note-title" href="#">Nueva nota</a>
+                <span class="note-meta">Sin contenido · Inbox · ahora</span>
+            </div>
+            <span class="chip chip-tag">#ideas</span>
+            <span class="note-time">ahora</span>
+        </div>
+    </template>
+{% endblock %}

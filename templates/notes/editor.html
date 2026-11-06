@@ -1,0 +1,101 @@
+{% extends "layouts/app.html" %}
+
+{% set active_nav = 'home' %}
+
+{% block title %}NotaLite - Editar nota{% endblock %}
+
+{% block app_content %}
+    <div class="app-mainbar editor-mainbar">
+        <a class="btn btn-app-ghost btn-app-sm"
+           href="{{ url_for('main.root') }}"
+           aria-label="Volver">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+
+        <input class="note-title-input"
+               id="noteTitle"
+               type="text"
+               value="Guía rápida de Markdown"
+               aria-label="Título de la nota">
+
+        <span class="chip chip-tag">#ideas</span>
+        <span class="chip"><i class="bi bi-folder2"></i> Trabajo</span>
+
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <span class="chip chip-ok" id="saveStatus">
+                <b>✓</b> Guardado · 12:04
+            </span>
+            <button class="btn btn-app" type="button">
+                <i class="bi bi-share"></i>
+                Compartir
+            </button>
+            <div class="dropdown">
+                <button class="btn btn-app-ghost"
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                        aria-label="Más acciones">
+                    <i class="bi bi-three-dots"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end app-dropdown">
+                    <li>
+                        <a class="dropdown-item" href="#">
+                            <i class="bi bi-download me-2"></i>Exportar a Markdown
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#">
+                            <i class="bi bi-file-earmark-pdf me-2"></i>Exportar a PDF
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="#">
+                            <i class="bi bi-trash3 me-2"></i>Mover a papelera
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="editor-toolbar">
+        <div class="view-switch" role="group" aria-label="Modo del editor">
+            <button class="view-switch-btn" type="button" data-view="edit">Editar</button>
+            <button class="view-switch-btn active" type="button" data-view="split">Dividido</button>
+            <button class="view-switch-btn" type="button" data-view="preview">Vista previa</button>
+        </div>
+    </div>
+
+    <div class="editor-body" id="editorBody" data-view="split">
+        <textarea class="editor-source"
+                  id="editorSource"
+                  spellcheck="false"
+                  aria-label="Contenido Markdown"># Guía rápida
+Bienvenido/a a **NotaLite**.
+
+## Encabezados
+Usa `#` para títulos.
+
+## Listas
+- primer elemento
+- segundo elemento
+
+## Código
+```python
+def hola():
+    return "hello"
+```
+
+## Enlace entre notas
+Ver [[Conceptos básicos]].</textarea>
+
+        <div class="editor-preview markdown-body" id="editorPreview"></div>
+    </div>
+
+    <div class="editor-foot">
+        <span><span id="wordCount">184</span> palabras</span>
+        <span>Autoguardado cada 2 s tras escribir</span>
+        <span class="ms-auto">Markdown habilitado</span>
+    </div>
+{% endblock %}
