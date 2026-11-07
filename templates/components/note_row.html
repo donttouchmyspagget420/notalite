@@ -8,6 +8,7 @@
     status=None,
     time=None,
     folder_icon=false,
+    note_icon=false,
     href='#') %}
     <div class="note-row">
         {% if avatar %}
@@ -16,6 +17,8 @@
             <span class="tag-dot {{ dot }}"></span>
         {% elif folder_icon %}
             <i class="bi bi-folder2 note-row-folder"></i>
+        {% elif note_icon %}
+            <i class="bi bi-file-earmark-text note-row-file"></i>
         {% endif %}
 
         <div class="note-row-body">

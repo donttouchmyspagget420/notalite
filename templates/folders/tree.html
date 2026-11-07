@@ -1,0 +1,32 @@
+{% extends "layouts/app.html" %}
+{% from "components/folder_tree.html" import folder_tree %}
+
+{% set active_nav = 'home' %}
+
+{% block title %}NotaLite - Vista jerárquica{% endblock %}
+
+{% block app_content %}
+    <div class="app-mainbar">
+        <a class="btn btn-app btn-app-ghost btn-app-sm"
+           href="{{ url_for('notes.folders') }}"
+           aria-label="Volver a carpetas">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <span class="app-mainbar-title">Vista jerárquica</span>
+        <span class="app-mainbar-sub">{{ total_notes }} notas</span>
+    </div>
+
+    <div class="app-content">
+        <div class="folder-tree folder-tree-full">
+            {% for root in directory_roots %}
+                {{ folder_tree(root, notes_by_directory, none, true) }}
+            {% else %}
+                <div class="app-empty-hint">
+                    <i class="bi bi-diagram-3"></i>
+                    <b>No hay carpetas todavía</b>
+                    <span>Creá una carpeta desde la barra lateral.</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

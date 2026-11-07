@@ -6,9 +6,9 @@
 
 {% block app_content %}
     <div class="app-mainbar editor-mainbar">
-        <a class="btn btn-app-ghost btn-app-sm"
-           href="{{ url_for('notes.list_notes') }}"
-           aria-label="Volver">
+        <a class="btn btn-app btn-app-ghost btn-app-sm"
+           href="{{ url_for('notes.folders', directory_id=note.directory.id) }}"
+           aria-label="Volver a la carpeta">
             <i class="bi bi-arrow-left"></i>
         </a>
 
@@ -36,7 +36,7 @@
             </span>
 
             <div class="dropdown">
-                <button class="btn btn-app-ghost"
+                <button class="btn btn-app btn-app-ghost"
                         type="button"
                         data-bs-toggle="dropdown"
                         data-bs-auto-close="outside"
@@ -61,9 +61,11 @@
                             <span>#{{ tag.nombre }}</span>
                         </label>
                     {% else %}
-                        <div class="tag-picker-empty">No hay etiquetas creadas.</div>
+                        <a class="tag-picker-empty" href="{{ url_for('notes.tags') }}">
+                            No hay etiquetas creadas. Crear una.
+                        </a>
                     {% endfor %}
-                    <button class="btn btn-app-primary btn-app-sm w-100 mt-2" type="submit">
+                    <button class="btn btn-app btn-app-primary btn-app-sm w-100 mt-2" type="submit">
                         Guardar etiquetas
                     </button>
                 </form>
@@ -75,7 +77,7 @@
             </button>
 
             <div class="dropdown">
-                <button class="btn btn-app-ghost"
+                <button class="btn btn-app btn-app-ghost"
                         type="button"
                         data-bs-toggle="dropdown"
                         aria-expanded="false"

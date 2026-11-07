@@ -2,13 +2,7 @@
     {% if messages %}
         <div class="app-flashes">
             {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show app-alert" role="alert">
-                    {{ message }}
-                    <button type="button"
-                            class="btn-close"
-                            data-bs-dismiss="alert"
-                            aria-label="Cerrar"></button>
-                </div>
+                <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
             {% endfor %}
         </div>
     {% endif %}

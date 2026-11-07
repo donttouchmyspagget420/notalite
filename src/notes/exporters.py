@@ -1,14 +1,10 @@
 import re
 import textwrap
 
-PAGE_WIDTH = 595
-PAGE_HEIGHT = 842
-MARGIN = 50
-LEADING = 14
-MAX_LINES = 52
+from src.enums import PdfMetric
 
 
-def _plain_lines(title, content):
+def build_pdf(title, content):
     raw_lines = [f"# {title}", ""] + (content or "").splitlines()
     lines = []
 
@@ -30,23 +26,16 @@ def _plain_lines(title, content):
             lines.append("")
             continue
 
-        wrapped = textwrap.wrap(line, width=88, break_long_words=True)
+        wrapped = textwrap.wrap(
+            line, width=PdfMetric.WRAP_WIDTH, break_long_words=True
+        )
         lines.extend(wrapped or [""])
 
-    return lines or [title]
-
-
-def _escape_pdf_text(text):
-    data = text.encode("cp1252", "replace")
-    data = data.replace(b"\\", b"\\\\")
-    data = data.replace(b"(", b"\\(")
-    data = data.replace(b")", b"\\)")
-    return data
-
-
-def build_pdf(title, content):
-    lines = _plain_lines(title, content)
-    pages = [lines[index:index + MAX_LINES] for index in range(0, len(lines), MAX_LINES)]
+    lines = lines or [title]
+    pages = [
+        lines[index:index + PdfMetric.MAX_LINES]
+        for index in range(0, len(lines), PdfMetric.MAX_LINES)
+    ]
     pages = pages or [[""]]
 
     kids = [f"{6 + index * 2} 0 R" for index in range(len(pages))]
@@ -65,16 +54,19 @@ def build_pdf(title, content):
 
     for index, page_lines in enumerate(pages):
         content_number = 5 + index * 2
-        page_number = 6 + index * 2
 
         stream = bytearray()
         stream += b"BT\n"
-        stream += b"/F1 11 Tf\n"
-        stream += b"50 790 Td\n"
-        stream += f"{LEADING} TL\n".encode("ascii")
+        stream += f"/F1 {PdfMetric.FONT_SIZE} Tf\n".encode("ascii")
+        stream += f"{PdfMetric.MARGIN} {PdfMetric.TEXT_TOP} Td\n".encode("ascii")
+        stream += f"{PdfMetric.LEADING} TL\n".encode("ascii")
 
         for line in page_lines:
-            stream += b"(" + _escape_pdf_text(line) + b") Tj\nT*\n"
+            data = line.encode("cp1252", "replace")
+            data = data.replace(b"\\", b"\\\\")
+            data = data.replace(b"(", b"\\(")
+            data = data.replace(b")", b"\\)")
+            stream += b"(" + data + b") Tj\nT*\n"
 
         stream += b"ET"
 
@@ -88,9 +80,9 @@ def build_pdf(title, content):
         objects.append(
             (
                 b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "
-                + str(PAGE_WIDTH).encode("ascii")
+                + str(PdfMetric.PAGE_WIDTH).encode("ascii")
                 + b" "
-                + str(PAGE_HEIGHT).encode("ascii")
+                + str(PdfMetric.PAGE_HEIGHT).encode("ascii")
                 + b"] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents "
                 + str(content_number).encode("ascii")
                 + b" 0 R >>"
@@ -109,6 +101,7 @@ def build_pdf(title, content):
     xref_position = len(pdf)
     pdf += f"xref\n0 {len(objects) + 1}\n".encode("ascii")
     pdf += b"0000000000 65535 f \n"
+
     for offset in offsets[1:]:
         pdf += f"{offset:010d} 00000 n \n".encode("ascii")
 

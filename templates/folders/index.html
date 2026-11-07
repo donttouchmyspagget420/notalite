@@ -1,71 +1,139 @@
 {% extends "layouts/app.html" %}
 {% from "components/note_row.html" import note_row %}
-
-{% set active_nav = 'home' %}
-{% set folder_create_open = true %}
-{% set show_tags = false %}
-
+{% set active_nav = "home" %}
 {% block title %}NotaLite - {{ active_directory.name }}{% endblock %}
-
 {% block app_content %}
     <div class="app-mainbar">
-        <span class="app-mainbar-title">{{ active_directory.name }}</span>
-        <span class="app-mainbar-sub">{{ notes|length }} notas</span>
-
-        <div class="ms-auto">
-            <form method="post" action="{{ url_for('notes.create_note') }}">
+        <div class="folder-title-wrap">
+            <nav class="folder-breadcrumb" aria-label="Ruta de carpetas">
+                <a href="{{ url_for("notes.list_notes") }}">Inicio</a>
+                {% for crumb in breadcrumbs %}
+                    <i class="bi bi-chevron-right"></i>
+                    {% if loop.last %}
+                        <span>{{ crumb.name }}</span>
+                    {% else %}
+                        <a href="{{ url_for('notes.folders', directory_id=crumb.id) }}">{{ crumb.name }}</a>
+                    {% endif %}
+                {% endfor %}
+            </nav>
+            <div class="folder-title-row">
+                <span class="app-mainbar-title">{{ active_directory.name }}</span>
+                <span class="app-mainbar-sub">{{ notes|length }} notas</span>
+            </div>
+        </div>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <button class="btn btn-app"
+                    type="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#newSubfolderModal">
+                <i class="bi bi-folder-plus"></i>
+                Nueva subcarpeta
+            </button>
+            <a class="btn btn-app" href="{{ url_for("notes.folders_tree") }}">
+                <i class="bi bi-diagram-3"></i>
+                Vista jerárquica
+            </a>
+            <a class="btn btn-app" href="{{ url_for("notes.import_export") }}">Importar / Exportar</a>
+            <form method="post" action="{{ url_for("notes.create_note") }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="directory_id" value="{{ active_directory.id }}">
                 <input type="hidden" name="mode" value="blank">
-                <button class="btn btn-app" type="submit">
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <button class="btn btn-app btn-app-primary" type="submit">
                     <i class="bi bi-plus-lg"></i>
                     Nueva nota aquí
                 </button>
             </form>
         </div>
     </div>
-
     <div class="app-content">
-        {% if notes %}
-            <div class="note-list">
-                {% for note in notes %}
-                    {% call note_row(
-                        note.title,
-                        note.name ~ ' · ' ~ (note.modified_at|timeago),
-                        folder_icon=true,
-                        time=note.modified_at|timeago,
-                        href=url_for('notes.edit_note', note_id=note.id)
-                    ) %}
-                        {% for tag in note.tags %}
-                            <a class="chip chip-tag"
-                               href="{{ url_for('notes.tags', tag_id=tag.id) }}">
-                                #{{ tag.nombre }}
-                            </a>
-                        {% endfor %}
-                        <button class="btn btn-app-ghost btn-app-sm note-move"
-                                type="button"
-                                data-bs-toggle="modal"
-                                data-bs-target="#moveNoteModal"
-                                data-move-note
-                                data-note-id="{{ note.id }}">
-                            Mover
-                        </button>
-                    {% endcall %}
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="app-empty-hint">
-                <i class="bi bi-folder2-open"></i>
-                <b>Esta carpeta está vacía</b>
-                <span>Creá una nota acá o mové una existente.</span>
-            </div>
+        {% if subfolders %}
+            <section class="folder-section">
+                <div class="app-section-label">Subcarpetas</div>
+                <div class="note-list">
+                    {% for folder in subfolders %}
+                        {{ note_row(
+                            folder.name,
+                            directory_note_counts.get(folder.id, 0) ~ ' notas · ' ~ (folder.children|length) ~ ' subcarpetas',
+                            folder_icon=true,
+                            href=url_for('notes.folders', directory_id=folder.id)
+                        ) }}
+                    {% endfor %}
+                </div>
+            </section>
         {% endif %}
-
-        <div class="app-hint mt-4">
-            Las subcarpetas se crean desde el menú «⋯» de cada carpeta y las notas se mueven con «Mover».
+        <section class="folder-section">
+            <div class="app-section-label">Notas en {{ active_directory.name }}</div>
+            {% if notes %}
+                <div class="note-list">
+                    {% for note in notes %}
+                        {% call note_row(
+                            note.title,
+                            note.name ~ ' · ' ~ (note.modified_at|timeago),
+                            note_icon=true,
+                            time=note.modified_at|timeago,
+                            href=url_for('notes.edit_note', note_id=note.id)
+                        ) %}
+                            {% for tag in note.tags %}
+                                <a class="chip chip-tag"
+                                   href="{{ url_for('notes.tags', tag_id=tag.id) }}">#{{ tag.nombre }}</a>
+                            {% endfor %}
+                            <button class="btn btn-app btn-app-ghost btn-app-sm note-move"
+                                    type="button"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#moveNoteModal"
+                                    data-move-note
+                                    data-note-id="{{ note.id }}">Mover</button>
+                        {% endcall %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="app-empty-hint">
+                    <i class="bi bi-folder2-open"></i>
+                    <b>Esta carpeta está vacía</b>
+                    <span>Creá una nota acá o mové una existente.</span>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+    <div class="modal fade"
+         id="newSubfolderModal"
+         tabindex="-1"
+         aria-labelledby="newSubfolderModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content app-modal"
+                  method="post"
+                  action="{{ url_for("notes.create_folder") }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="parent_id" value="{{ active_directory.id }}">
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <div class="modal-header">
+                    <h5 class="modal-title fs-6" id="newSubfolderModalLabel">Nueva subcarpeta en {{ active_directory.name }}</h5>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label form-label-sm text-uppercase fw-semibold"
+                           for="newSubfolderName">Nombre</label>
+                    <input class="form-control"
+                           id="newSubfolderName"
+                           type="text"
+                           name="name"
+                           placeholder="Nombre de la subcarpeta…"
+                           required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-app btn-app-ghost"
+                            data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-app btn-app-primary">Crear subcarpeta</button>
+                </div>
+            </form>
         </div>
     </div>
-
     <div class="modal fade"
          id="moveNoteModal"
          tabindex="-1"
@@ -102,8 +170,10 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-app-ghost" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-app-primary">Mover nota</button>
+                    <button type="button"
+                            class="btn btn-app btn-app-ghost"
+                            data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-app btn-app-primary">Mover nota</button>
                 </div>
             </form>
         </div>

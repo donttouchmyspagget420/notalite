@@ -29,8 +29,9 @@
                        type="text"
                        name="name"
                        placeholder="Nueva etiqueta…"
-                       aria-label="Nueva etiqueta">
-                <button class="btn btn-app-primary btn-app-sm" type="submit">
+                       aria-label="Nueva etiqueta"
+                       required>
+                <button class="btn btn-app btn-app-primary btn-app-sm" type="submit">
                     <i class="bi bi-plus-lg"></i>
                     Crear
                 </button>
@@ -38,7 +39,7 @@
 
             {% if active_tag %}
                 <div class="dropdown">
-                    <button class="btn btn-app-ghost btn-app-sm"
+                    <button class="btn btn-app btn-app-ghost btn-app-sm"
                             type="button"
                             data-bs-toggle="dropdown"
                             aria-expanded="false"
@@ -83,7 +84,7 @@
                               action="{{ url_for('notes.remove_note_tag', note_id=note.id, tag_id=active_tag.id) }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="next" value="{{ request.path }}">
-                            <button class="btn btn-app-ghost btn-app-sm btn-app-danger"
+                            <button class="btn btn-app btn-app-ghost btn-app-sm btn-app-danger"
                                     type="submit">
                                 Quitar
                             </button>

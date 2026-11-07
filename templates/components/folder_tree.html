@@ -1,0 +1,32 @@
+{% macro folder_tree(node, notes_by_directory, active_id=none, open_all=false) %}
+    {% set node_notes = notes_by_directory.get(node.id, []) %}
+    {% set children = node.children|sort(attribute='name') %}
+    <details class="folder-tree-node" {% if open_all or node.id == active_id %}open{% endif %}>
+        <summary class="folder-tree-summary">
+            <a class="folder-tree-name"
+               href="{{ url_for('notes.folders', directory_id=node.id) }}">
+                <i class="bi bi-folder2"></i>
+                <span>{{ node.name }}</span>
+            </a>
+            <span class="folder-tree-count">{{ node_notes|length }}</span>
+        </summary>
+        <div class="folder-tree-body">
+            {% for note in node_notes %}
+                <a class="folder-tree-note"
+                   href="{{ url_for('notes.edit_note', note_id=note.id) }}">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>{{ note.title }}</span>
+                    <span class="folder-tree-note-time">{{ note.modified_at|timeago }}</span>
+                </a>
+            {% endfor %}
+
+            {% for child in children %}
+                {{ folder_tree(child, notes_by_directory, active_id, open_all) }}
+            {% endfor %}
+
+            {% if not node_notes and not children %}
+                <span class="folder-tree-empty">Carpeta vacía</span>
+            {% endif %}
+        </div>
+    </details>
+{% endmacro %}

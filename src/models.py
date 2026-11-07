@@ -35,6 +35,7 @@ class User(db.Model,UserMixin):
     directories = db.relationship("Directory", back_populates="user") 
     notes = db.relationship("Note", back_populates="user")  
     collabs = db.relationship("Collab", back_populates="user") 
+    tags = db.relationship("Tag", back_populates="user")
 
 class Pending(db.Model):
     __tablename__ = 'pendings'
@@ -104,8 +105,10 @@ class Tag(db.Model):
 
     id = db.Column(db.Integer, primary_key = True)
     nombre = db.Column(db.String(100), nullable = False)
-    color = db.Column(db.String(7), nullable = False) #color en hex como: #ffffff
+    color = db.Column(db.String(7), nullable = False, default="#6d6df6") #color en hex como: #ffffff
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
 
+    user = db.relationship("User", back_populates="tags")
     notes = db.relationship("Note", secondary=note_tags, back_populates="tags", lazy="select")
 
 
