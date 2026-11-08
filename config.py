@@ -26,3 +26,4 @@ class Config:
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER")
     GOOGLE_LLM_API_KEY = os.getenv("GOOGLE_LLM_API_KEY")
     GOOGLE_LLM_MODEL = os.getenv("GOOGLE_LLM_MODEL")
+    UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER")

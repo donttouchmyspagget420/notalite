@@ -16,9 +16,9 @@ def profile():
 @bp.route("/profile", methods=["POST"])
 @login_required
 def update_profile():
-    name = request.form.get("name", "").strip()
-    email = request.form.get("email", "").strip().lower()
-    avatar = request.form.get("avatar", "").strip()
+    name = request.form.get("name")
+    email = request.form.get("email")
+    avatar = request.files["avatar"]
 
     if not name or not email:
         flash("El nombre y el email son obligatorios.", "warning")
@@ -36,10 +36,6 @@ def update_profile():
     current_user.email = email[:NoteLength.TITLE]
     current_user.avatar = avatar[:NoteLength.TITLE] or None
     db.session.commit()
-
-    session["name"] = current_user.name
-    session["email"] = current_user.email
-    session["avatar"] = current_user.avatar
 
     flash("Perfil actualizado.", "success")
     return redirect(url_for("settings.profile"))
