@@ -22,7 +22,7 @@ def login():
         else:
             user = User.query.filter_by(email=email).first()
             if user and bcrypt.check_password_hash(user.password, password):
-                session_login(user)
+                login_user(user)
                 flash("Logueado correctamente", "success")
                 return redirect(url_for("notes.list_notes"))
             flash("Contraseña o email incorrecto", "warning")
@@ -99,7 +99,7 @@ def email_verification():
     db.session.commit()
     session.pop("pending_signup_email", None)
 
-    session_login(user)
+    login_user(user)
 
     flash("Cliente creado exitosamente", "success")
     return  redirect(url_for("notes.list_notes")) 
@@ -128,15 +128,9 @@ def callback_google():
         db.session.add(user)
         db.session.commit()
 
-    session_login(user)
+    login_user(user)
 
     flash("Logueado exitosamente", "success")
     return  redirect(url_for("notes.list_notes")) 
     
-def session_login(user):
-    login_user(user)
-    
-    session["name"] = user.name
-    session["email"] = user.email
-    session["avatar"] = user.avatar
 

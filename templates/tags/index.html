@@ -69,7 +69,7 @@
                 {% for note in notes %}
                     {% call note_row(
                         note.title,
-                        note.directory.name ~ ' · ' ~ (note.modified_at|timeago),
+                        (note.directory.name if note.directory else 'Sin carpeta') ~ ' · ' ~ (note.modified_at|timeago),
                         dot='blue',
                         href=url_for('notes.edit_note', note_id=note.id)
                     ) %}

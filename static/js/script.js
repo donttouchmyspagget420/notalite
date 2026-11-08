@@ -396,6 +396,165 @@
     });
   });
 
+  /* -------------------------------------------------------
+     AI assistant (UC-03)
+     ------------------------------------------------------- */
+  const aiModalElement = qs("#aiModal");
+  const aiUrl = aiModalElement ? aiModalElement.dataset.aiUrl : "";
+  const aiPromptWrap = qs("#aiPromptWrap");
+  const aiPrompt = qs("#aiPrompt");
+  const aiGenerate = qs("#aiGenerate");
+  const aiStatus = qs("#aiStatus");
+  const aiResult = qs("#aiResult");
+  const aiInsert = qs("#aiInsert");
+  const aiReplace = qs("#aiReplace");
+  let aiAction = "improve";
+  let aiRange = null;
+  let aiBusy = false;
+
+  function captureSelection() {
+    if (!editorSource) return null;
+    const start = editorSource.selectionStart;
+    const end = editorSource.selectionEnd;
+
+    if (typeof start !== "number" || start === end) return null;
+
+    return { start: start, end: end, text: editorSource.value.slice(start, end) };
+  }
+
+  function showAiModal() {
+    if (!aiModalElement || !window.bootstrap) return;
+    window.bootstrap.Modal.getOrCreateInstance(aiModalElement).show();
+  }
+
+  function hideAiModal() {
+    if (!aiModalElement || !window.bootstrap) return;
+    window.bootstrap.Modal.getOrCreateInstance(aiModalElement).hide();
+  }
+
+  function setAiBusy(busy) {
+    aiBusy = busy;
+
+    if (aiInsert) aiInsert.disabled = busy || !aiResult.value;
+    if (aiReplace) aiReplace.disabled = busy || !aiResult.value;
+    if (aiGenerate) aiGenerate.disabled = busy;
+  }
+
+  async function requestAi() {
+    if (!aiUrl || !aiResult || aiBusy) return;
+
+    const prompt = aiPrompt ? aiPrompt.value.trim() : "";
+
+    if (aiAction === "custom" && !prompt) {
+      aiStatus.textContent = "Escribí una instrucción para la IA.";
+      aiStatus.classList.add("error");
+      return;
+    }
+
+    setAiBusy(true);
+    aiStatus.classList.remove("error");
+    aiStatus.textContent = "Generando…";
+    aiResult.value = "";
+    aiInsert.disabled = true;
+    aiReplace.disabled = true;
+
+    try {
+      const response = await fetch(aiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken()
+        },
+        body: JSON.stringify({
+          action: aiAction,
+          prompt: prompt,
+          selection: aiRange ? aiRange.text : ""
+        })
+      });
+
+      const data = await response.json().catch(function () {
+        return {};
+      });
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || "No se pudo generar el texto.");
+      }
+
+      aiResult.value = data.text;
+      aiStatus.textContent = "";
+    } catch (error) {
+      aiStatus.textContent =
+        error.message || "No se pudo generar el texto.";
+      aiStatus.classList.add("error");
+    } finally {
+      setAiBusy(false);
+    }
+  }
+
+  qsa("[data-ai-action]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      if (!aiModalElement) return;
+
+      aiAction = button.dataset.aiAction || "improve";
+      aiRange = captureSelection();
+
+      aiStatus.classList.remove("error");
+      aiStatus.textContent = "";
+      aiResult.value = "";
+
+      const custom = aiAction === "custom";
+      aiPromptWrap.classList.toggle("d-none", !custom);
+      aiGenerate.classList.toggle("d-none", !custom);
+
+      showAiModal();
+
+      if (custom) {
+        aiPrompt.value = "";
+        window.setTimeout(function () {
+          aiPrompt.focus();
+        }, 250);
+      } else {
+        requestAi();
+      }
+    });
+  });
+
+  if (aiGenerate) {
+    aiGenerate.addEventListener("click", requestAi);
+  }
+
+  function applyAiResult(replaceAll) {
+    if (!editorSource || !aiResult || !aiResult.value) return;
+
+    const text = aiResult.value;
+
+    if (replaceAll) {
+      editorSource.value = text;
+    } else {
+      const start = aiRange ? aiRange.start : editorSource.selectionStart;
+      const end = aiRange ? aiRange.end : editorSource.selectionEnd;
+
+      editorSource.value =
+        editorSource.value.slice(0, start) + text + editorSource.value.slice(end);
+    }
+
+    editorSource.focus();
+    editorSource.dispatchEvent(new Event("input", { bubbles: true }));
+    hideAiModal();
+  }
+
+  if (aiInsert) {
+    aiInsert.addEventListener("click", function () {
+      applyAiResult(false);
+    });
+  }
+
+  if (aiReplace) {
+    aiReplace.addEventListener("click", function () {
+      applyAiResult(true);
+    });
+  }
+
   qsa("[data-copy-link]").forEach(function (button) {
     button.addEventListener("click", async function () {
       const original = button.innerHTML;

@@ -22,8 +22,8 @@
         {% endif %}
 
         <div class="note-row-body">
-            <a class="note-title" href="{{ href }}">{{ title }}</a>
-            <span class="note-meta">{{ meta|safe }}</span>
+            <a class="note-title d-block text-truncate" href="{{ href }}">{{ title }}</a>
+            <span class="note-meta d-block text-truncate">{{ meta|safe }}</span>
         </div>
 
         {% if tag %}<span class="chip chip-tag">{{ tag }}</span>{% endif %}

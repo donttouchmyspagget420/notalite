@@ -32,8 +32,9 @@ NotaLite/
     │   └── routes.py       //login, signup y verificacion
     ├── services/
     │   └── mailer.py       //envio de correos
-    └── llm/
-        └── __init__.py     //integracion con modelos de lenguaje (pendiente)
+        └── gemini.py       //asistente de IA para el editor
+    ├── settings/
+    │   └── routes.py       //perfil, contraseña y tema
 ```
 
 ## Intalacion
@@ -83,6 +84,19 @@ Flask detecta la app automaticamente gracias al archivo `.flaskenv`.
 Si no querés usar `.flaskenv`, el equivalente explicito es:
 
 `flask --app src run`
+
+## Asistente de IA
+
+El editor incluye acciones de IA (resumir, mejorar, continuar, traducir e instrucción personalizada).
+Configurá una clave de Google Gemini en `.env`:
+
+`GOOGLE_LLM_API_KEY=tu-clave`
+
+`GOOGLE_LLM_MODEL=gemini-2.0-flash`
+
+## Tests
+
+`python -m unittest discover -s tests -v`
 
 ## Herramientas
 

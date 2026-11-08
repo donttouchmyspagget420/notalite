@@ -5,6 +5,11 @@
 
 {% block title %}NotaLite - Vista jerárquica{% endblock %}
 
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/folders.css') }}">
+{% endblock %}
+
 {% block app_content %}
     <div class="app-mainbar">
         <a class="btn btn-app btn-app-ghost btn-app-sm"

@@ -2,6 +2,11 @@
 {% from "components/note_row.html" import note_row %}
 {% set active_nav = "home" %}
 {% block title %}NotaLite - {{ active_directory.name }}{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/folders.css') }}">
+{% endblock %}
 {% block app_content %}
     <div class="app-mainbar">
         <div class="folder-title-wrap">
@@ -156,6 +161,13 @@
                 <div class="modal-body">
                     <p class="app-modal-text">Elegí la carpeta de destino.</p>
                     <div class="folder-picker">
+                        <label class="folder-picker-item">
+                            <input class="form-check-input"
+                                   type="radio"
+                                   name="directory_id"
+                                   value="">
+                            <span><i class="bi bi-folder2"></i> Sin carpeta</span>
+                        </label>
                         {% for directory in sidebar_directories %}
                             <label class="folder-picker-item">
                                 <input class="form-check-input"

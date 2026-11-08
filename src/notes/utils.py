@@ -120,26 +120,6 @@ def directory_breadcrumbs(directory):
     return list(reversed(breadcrumbs))
 
 
-def default_directory(exclude_id=None):
-    query = Directory.query.filter_by(user_id=current_user.id)
-
-    if exclude_id is not None:
-        query = query.filter(Directory.id != exclude_id)
-
-    directory = query.filter(func.lower(Directory.name) == "inbox").first()
-    if directory:
-        return directory
-
-    directory = query.filter(Directory.parent_id.is_(None)).order_by(Directory.id).first()
-    if directory:
-        return directory
-
-    directory = Directory(name="Inbox", user_id=current_user.id)
-    db.session.add(directory)
-    db.session.commit()
-    return directory
-
-
 def note_or_404(note_id):
     note = Note.query.filter_by(id=note_id, user_id=current_user.id).first()
 

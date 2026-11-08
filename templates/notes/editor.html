@@ -4,11 +4,16 @@
 
 {% block title %}NotaLite - {{ note.title }}{% endblock %}
 
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/editor.css') }}">
+{% endblock %}
+
 {% block app_content %}
     <div class="app-mainbar editor-mainbar">
         <a class="btn btn-app btn-app-ghost btn-app-sm"
-           href="{{ url_for('notes.folders', directory_id=note.directory.id) }}"
-           aria-label="Volver a la carpeta">
+           href="{{ url_for('notes.folders', directory_id=note.directory.id) if note.directory else url_for('notes.list_notes') }}"
+           aria-label="{{ 'Volver a la carpeta' if note.directory else 'Volver a las notas' }}">
             <i class="bi bi-arrow-left"></i>
         </a>
 
@@ -26,9 +31,15 @@
             </a>
         {% endfor %}
 
-        <a class="chip" href="{{ url_for('notes.folders', directory_id=note.directory.id) }}">
-            <i class="bi bi-folder2"></i> {{ note.directory.name }}
-        </a>
+        {% if note.directory %}
+            <a class="chip" href="{{ url_for('notes.folders', directory_id=note.directory.id) }}">
+                <i class="bi bi-folder2"></i> {{ note.directory.name }}
+            </a>
+        {% else %}
+            <span class="chip">
+                <i class="bi bi-folder2"></i> Sin carpeta
+            </span>
+        {% endif %}
 
         <div class="ms-auto d-flex align-items-center gap-2">
             <span class="chip chip-ok" id="saveStatus">
@@ -118,6 +129,26 @@
             <button class="view-switch-btn active" type="button" data-view="split">Dividido</button>
             <button class="view-switch-btn" type="button" data-view="preview">Vista previa</button>
         </div>
+
+        <div class="dropdown editor-ai">
+            <button class="btn btn-app btn-app-ghost btn-app-sm"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    aria-label="Asistente de IA">
+                <i class="bi bi-stars"></i>
+                IA
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end app-dropdown">
+                <li><h6 class="dropdown-header">Asistente de IA</h6></li>
+                <li><button class="dropdown-item" type="button" data-ai-action="summarize">Resumir</button></li>
+                <li><button class="dropdown-item" type="button" data-ai-action="improve">Mejorar redacción</button></li>
+                <li><button class="dropdown-item" type="button" data-ai-action="continue">Continuar texto</button></li>
+                <li><button class="dropdown-item" type="button" data-ai-action="translate">Traducir al inglés</button></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><button class="dropdown-item" type="button" data-ai-action="custom">Instrucción personalizada…</button></li>
+            </ul>
+        </div>
     </div>
 
     <div class="editor-body" id="editorBody" data-view="split">
@@ -133,5 +164,57 @@
         <span><span id="wordCount">{{ word_count }}</span> palabras</span>
         <span>Autoguardado cada 2 s tras escribir</span>
         <span class="ms-auto">Markdown habilitado</span>
+    </div>
+
+    <div class="modal fade"
+         id="aiModal"
+         tabindex="-1"
+         aria-labelledby="aiModalTitle"
+         aria-hidden="true"
+         data-ai-url="{{ url_for('notes.ai_assist', note_id=note.id) }}">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content app-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="aiModalTitle">
+                        <i class="bi bi-stars"></i>
+                        Asistente de IA
+                    </h5>
+                    <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="ai-prompt-wrap d-none" id="aiPromptWrap">
+                        <label class="ai-label" for="aiPrompt">Instrucción</label>
+                        <textarea class="form-control app-input"
+                                  id="aiPrompt"
+                                  rows="2"
+                                  placeholder="Ej: convertí esto en una lista de pasos"></textarea>
+                        <button class="btn btn-app btn-app-primary btn-app-sm mt-2"
+                                type="button"
+                                id="aiGenerate">
+                            Generar
+                        </button>
+                    </div>
+
+                    <div class="ai-status" id="aiStatus"></div>
+
+                    <label class="ai-label" for="aiResult">Resultado</label>
+                    <textarea class="form-control app-input ai-result"
+                              id="aiResult"
+                              rows="10"
+                              readonly></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-app btn-app-ghost" type="button" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button class="btn btn-app btn-app-ghost" type="button" id="aiReplace" disabled>
+                        Reemplazar nota
+                    </button>
+                    <button class="btn btn-app btn-app-primary" type="button" id="aiInsert" disabled>
+                        Insertar
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock %}

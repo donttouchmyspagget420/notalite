@@ -1,5 +1,9 @@
 {% extends "layouts/template.html" %}
 {% block title %}NotaLite - Home{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/landing.css') }}">
+{% endblock %}
 {% block content %}
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}

@@ -82,7 +82,7 @@ class Note(db.Model):
     deleted_at = db.Column(db.DateTime(timezone = True))
     to_delete = db.Column(db.Boolean, default = False)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
-    directory_id = db.Column(db.Integer, db.ForeignKey("directories.id"), nullable = False)
+    directory_id = db.Column(db.Integer, db.ForeignKey("directories.id"), nullable = True)
 
     user = db.relationship("User", back_populates = "notes")
     directory = db.relationship("Directory", back_populates = "notes")

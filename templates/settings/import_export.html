@@ -1,5 +1,10 @@
 {% extends "layouts/app_plain.html" %}
 
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/settings.css') }}">
+{% endblock %}
+
 {% block title %}NotaLite - Importar y exportar{% endblock %}
 {% block app_section %}Importar / Exportar{% endblock %}
 
@@ -95,6 +100,7 @@
                 <select class="form-select app-input settings-select"
                         id="importDirectory"
                         name="directory_id">
+                    <option value="">Sin carpeta</option>
                     {% for directory in sidebar_directories %}
                         <option value="{{ directory.id }}">{{ directory.name }}</option>
                     {% endfor %}

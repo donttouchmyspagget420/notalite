@@ -5,11 +5,11 @@ from werkzeug.utils import secure_filename
 
 from src.enums import ImportLimit, NoteLength
 from src.extensions import db
+from src.services.gemini import LlmError, generate_text
 from src.models import Directory, Note, Tag, note_tags, utcnow
 from src.notes import bp
 from src.notes.utils import (
     active_notes,
-    default_directory,
     directory_breadcrumbs,
     directory_or_404,
     directory_or_none,
@@ -59,9 +59,6 @@ def create_note():
 
     directory = directory_or_none(request.form.get("directory_id"))
 
-    if not directory:
-        directory = default_directory()
-
     now = utcnow()
     note = Note(
         title=title[:NoteLength.TITLE],
@@ -71,7 +68,7 @@ def create_note():
         modified_at=now,
         to_delete=False,
         user_id=current_user.id,
-        directory_id=directory.id,
+        directory_id=directory.id if directory else None,
     )
 
     db.session.add(note)
@@ -121,6 +118,55 @@ def save_note(note_id):
     )
 
 
+@bp.route("/<int:note_id>/ai", methods=["POST"])
+@login_required
+def ai_assist(note_id):
+    note = note_or_404(note_id)
+    payload = request.get_json(silent=True)
+
+    if not isinstance(payload, dict):
+        payload = request.form
+
+    action = (payload.get("action") or "improve").strip()
+    selection = (payload.get("selection") or "").strip()
+    instruction = (payload.get("prompt") or "").strip()
+    source = selection or (note.content or "").strip()
+
+    if not source:
+        return jsonify(ok=False, error="La nota está vacía."), 400
+
+    instructions = {
+        "summarize": "Resumí el texto en español usando una lista breve de viñetas.",
+        "improve": "Mejorá la redacción del texto en español sin cambiar su significado.",
+        "continue": "Continuá el texto en español manteniendo el tono y el estilo.",
+        "translate": "Traducí el texto al inglés manteniendo el formato Markdown.",
+    }
+
+    if action == "custom":
+        if not instruction:
+            return jsonify(ok=False, error="Escribí una instrucción para la IA."), 400
+        task = instruction
+    else:
+        task = instructions.get(action, instructions["improve"])
+
+    prompt = (
+        f"{task}\n\n"
+        "Respondé únicamente con el resultado, sin explicaciones ni comentarios. "
+        "Usá Markdown cuando corresponda.\n\n"
+        f"Texto:\n{source}"
+    )
+
+    try:
+        text = generate_text(prompt)
+    except LlmError as error:
+        return jsonify(ok=False, error=str(error)), 502
+
+    if not text:
+        return jsonify(ok=False, error="La IA no devolvió texto."), 502
+
+    return jsonify(ok=True, text=text)
+
+
 @bp.route("/<int:note_id>/tags", methods=["POST"])
 @login_required
 def update_note_tags(note_id):
@@ -165,18 +211,23 @@ def remove_note_tag(note_id, tag_id):
 @login_required
 def move_note(note_id):
     note = note_or_404(note_id)
-    directory = directory_or_none(request.form.get("directory_id"))
+    directory_value = request.form.get("directory_id", "")
+    directory = directory_or_none(directory_value)
 
-    if not directory:
+    if directory_value and not directory:
         flash("Elegí una carpeta válida.", "warning")
         return safe_next("notes.list_notes")
 
-    note.directory_id = directory.id
+    note.directory_id = directory.id if directory else None
     note.modified_at = utcnow()
     db.session.commit()
 
-    flash(f"Nota movida a «{directory.name}».", "success")
-    return safe_next("notes.folders", directory_id=directory.id)
+    if directory:
+        flash(f"Nota movida a «{directory.name}».", "success")
+        return safe_next("notes.folders", directory_id=directory.id)
+
+    flash("La nota quedó sin carpeta.", "success")
+    return safe_next("notes.list_notes")
 
 
 @bp.route("/<int:note_id>/delete", methods=["POST"])
@@ -210,7 +261,7 @@ def folders(directory_id=None):
         )
 
         if not directory:
-            directory = default_directory()
+            return redirect(url_for("notes.list_notes"))
     else:
         directory = directory_or_404(directory_id)
 
@@ -284,10 +335,11 @@ def rename_folder(directory_id):
 @login_required
 def delete_folder(directory_id):
     directory = directory_or_404(directory_id)
-    fallback = directory.parent or default_directory(exclude_id=directory.id)
+    fallback = directory.parent
 
     Note.query.filter_by(user_id=current_user.id, directory_id=directory.id).update(
-        {Note.directory_id: fallback.id}, synchronize_session=False
+        {Note.directory_id: fallback.id if fallback else None},
+        synchronize_session=False,
     )
 
     for child in list(directory.children):
@@ -296,9 +348,13 @@ def delete_folder(directory_id):
     db.session.delete(directory)
     db.session.commit()
 
-    flash("Carpeta eliminada; sus notas se movieron a "
-          f"«{fallback.name}».", "success")
-    return redirect(url_for("notes.folders", directory_id=fallback.id))
+    if fallback:
+        flash("Carpeta eliminada; sus notas se movieron a "
+              f"«{fallback.name}».", "success")
+        return redirect(url_for("notes.folders", directory_id=fallback.id))
+
+    flash("Carpeta eliminada; sus notas quedaron sin carpeta.", "success")
+    return redirect(url_for("notes.list_notes"))
 
 
 @bp.route("/tags")
@@ -407,9 +463,6 @@ def import_notes():
 
     directory = directory_or_none(request.form.get("directory_id"))
 
-    if not directory:
-        directory = default_directory()
-
     imported = 0
     skipped = 0
 
@@ -447,7 +500,7 @@ def import_notes():
             modified_at=now,
             to_delete=False,
             user_id=current_user.id,
-            directory_id=directory.id,
+            directory_id=directory.id if directory else None,
         )
 
         db.session.add(note)

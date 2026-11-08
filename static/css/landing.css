@@ -1,0 +1,53 @@
+/* Landing and authentication pages. */
+.btn-main {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.border-main {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.hi {
+  font-size: 11px;
+  color: var(--accent-hi);
+  font-weight: 700;
+}
+
+.p-landing {
+  color: var(--sub);
+}
+
+.footer {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+}
+
+.footer-card {
+  background: var(--panel);
+  padding: 14px 16px;
+}
+
+.footer-header {
+  font-size: 12.5px;
+}
+
+.footer-header-txt {
+  font-size: 11px;
+  color: var(--dim);
+  margin-top: 3px;
+}
+
+/* Custom Card Modifications */
+.card-custom {
+  border-radius: 14px; /* Native BS uses standard sizes like rounded-3 (0.5rem / 8px) */
+  border: 1px solid var(--border);
+  background: var(--panel);
+}
+
+/* Extra small text helper for legal micro-copy */
+.extra-small {
+  font-size: 11.5px;
+}

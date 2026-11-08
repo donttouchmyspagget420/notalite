@@ -141,19 +141,18 @@
         </nav>
         <div class="app-sidebar-footer">
             <img class="avatar"
-                src="{{ current_user.avatar or url_for('static', filename='imgs/logo.png') }}"
-                alt="{{ current_user.name }}
-                referrerpolicy="
-                no-referrer
-                "
-                >
-                <div class="who">
-                    <b>{{ current_user.name }}</b>
-                    <span>{{ current_user.email }}</span>
-                </div>
-                <span class="app-icon-btn" aria-hidden="true">
-                    <i class="bi bi-gear"></i>
-                </span>
+                 src="{{ current_user.avatar or url_for('static', filename='imgs/logo.png') }}"
+                 alt="{{ current_user.name }}"
+                 referrerpolicy="no-referrer">
+            <div class="who">
+                <b>{{ current_user.name }}</b>
+                <span>{{ current_user.email }}</span>
             </div>
+            <a class="app-icon-btn"
+               href="{{ url_for("settings.profile") }}"
+               aria-hidden="true">
+                <i class="bi bi-gear"></i>
+            </a>
         </div>
+    </div>
 {% endmacro %}

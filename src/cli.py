@@ -5,6 +5,17 @@ from sqlalchemy import inspect, text
 from src.extensions import db
 
 
+@click.group("tests")
+def tests_cli():
+    """Utilidades de tests."""
+
+@tests_cli.command("run")
+@with_appcontext
+# TODO: make it run tests
+def run():
+    print("running tests")
+
+
 @click.group("db")
 def db_cli():
     """Utilidades de base de datos."""
@@ -80,4 +91,4 @@ def check():
 
 
 def init_app(app):
-    app.cli.add_command(db_cli)
+    app.cli.add_command(db_cli,tests_cli)

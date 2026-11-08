@@ -64,7 +64,7 @@
                 {% for note in notes %}
                     {% call note_row(
                         note.title,
-                        note.directory.name,
+                        note.directory.name if note.directory else 'Sin carpeta',
                         avatar=note.title[:1]|upper,
                         avatar_class=avatar_classes[note.id % 5],
                         time=note.modified_at|timeago,

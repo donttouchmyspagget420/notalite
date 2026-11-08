@@ -1,0 +1,338 @@
+/* Settings, profile, and import/export pages. */
+/* =========================================================
+   Plain app layout + settings (UC-12)
+   ========================================================= */
+.app-plain {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.app-plain-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.app-plain-sep {
+  color: var(--dim);
+}
+
+.app-plain-title {
+  color: var(--sub);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.app-plain-content {
+  flex: 1;
+  padding: 20px;
+}
+
+.settings-grid {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  align-items: stretch;
+  gap: 18px;
+}
+
+.settings-column {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.settings-profile-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.settings-profile-fields {
+  flex: 1;
+  min-width: 0;
+}
+
+.avatar-lg {
+  width: 42px;
+  height: 42px;
+  font-size: 16px;
+}
+
+.settings-theme-options {
+  display: flex;
+  gap: 8px;
+}
+
+.settings-theme-option {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--border-2);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--sub);
+  font-size: 12px;
+  text-align: center;
+}
+
+.settings-theme-option.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--txt);
+  font-weight: 600;
+}
+
+.settings-plan-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+
+.settings-plan-row div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-plan-row b {
+  font-size: 12.5px;
+}
+
+.settings-plan-row div span {
+  color: var(--dim);
+  font-size: 11px;
+}
+
+.settings-logout-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-logout-row div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-logout-row b {
+  color: var(--red);
+  font-size: 13px;
+}
+
+.settings-logout-row span {
+  color: var(--dim);
+  font-size: 11px;
+}
+
+.settings-card {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.settings-card-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.settings-card-sub {
+  margin: 3px 0 14px;
+  color: var(--dim);
+  font-size: 11.5px;
+}
+
+.export-options {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.export-option {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--border-2);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--txt);
+  text-align: center;
+  cursor: pointer;
+}
+
+.export-option b {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.export-option span {
+  display: block;
+  margin-top: 2px;
+  color: var(--dim);
+  font-size: 10px;
+}
+
+.export-option:hover {
+  border-color: var(--accent);
+}
+
+.export-option.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.export-option.selected b {
+  color: #fff;
+}
+
+.export-option.selected span {
+  color: var(--sub);
+}
+
+.settings-block {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.settings-label {
+  margin-bottom: 8px;
+  color: var(--dim);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--panel-2);
+  font-size: 12.5px;
+}
+
+.list-item + .list-item {
+  margin-top: 7px;
+}
+
+.list-item .nm {
+  flex: 1;
+  min-width: 0;
+}
+
+.list-item .nm b {
+  display: block;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list-item .nm span {
+  display: block;
+  color: var(--dim);
+  font-size: 11px;
+}
+
+.dropzone {
+  padding: 22px;
+  border: 1.5px dashed var(--border-2);
+  border-radius: 11px;
+  background: var(--bg);
+  color: var(--sub);
+  font-size: 12.5px;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.dropzone:hover,
+.dropzone.dragover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.dropzone-icon {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--dim);
+  font-size: 22px;
+}
+
+.dropzone b {
+  color: var(--accent-hi);
+}
+
+.dropzone-hint {
+  display: block;
+  margin-top: 4px;
+  color: var(--dim);
+  font-size: 10.5px;
+}
+
+.import-list {
+  flex: 1;
+  margin-top: 12px;
+}
+
+/* =========================================================
+   Settings selects
+   ========================================================= */
+.settings-select {
+  margin-bottom: 0;
+  border: 1px solid var(--border-2) !important;
+  border-radius: 8px !important;
+  background-color: #0e1013 !important;
+  color: var(--txt) !important;
+  font-size: 12.5px !important;
+}
+
+.settings-select:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-soft) !important;
+}
+
+.settings-select option {
+  background: #0e1013;
+  color: var(--txt);
+}
+
+.export-option:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+@media (max-width: 640px) {
+
+  .settings-grid {
+    flex-direction: column;
+  }
+
+  .app-plain-content {
+    padding: 12px;
+  }
+}
