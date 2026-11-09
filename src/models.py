@@ -15,7 +15,9 @@ class Role(db.Model):
     name = db.Column(db.String(100), nullable = False)
 
     users = db.relationship("User", back_populates="role")
-    pendings = db.relationship("Pending", back_populates="role")
+    pendings = db.relationship(
+        "Pending", back_populates="role", cascade="all, delete-orphan"
+    )
 
 class User(db.Model,UserMixin):
     __tablename__ = 'users'
@@ -29,13 +31,25 @@ class User(db.Model,UserMixin):
     password = db.Column(db.String(255), nullable = True)
     avatar = db.Column(db.String(255))
     timestamp = db.Column(db.DateTime(timezone = True), default = utcnow)
-    role_id = db.Column(db.Integer, db.ForeignKey("roles.id"), nullable = False)
+    role_id = db.Column(
+        db.Integer,
+        db.ForeignKey("roles.id", ondelete="RESTRICT"),
+        nullable = False,
+    )
 
     role = db.relationship("Role", back_populates = "users")
-    directories = db.relationship("Directory", back_populates="user") 
-    notes = db.relationship("Note", back_populates="user")  
-    collabs = db.relationship("Collab", back_populates="user") 
-    tags = db.relationship("Tag", back_populates="user")
+    directories = db.relationship(
+        "Directory", back_populates="user", cascade="all, delete-orphan"
+    )
+    notes = db.relationship(
+        "Note", back_populates="user", cascade="all, delete-orphan"
+    )
+    collabs = db.relationship(
+        "Collab", back_populates="user", cascade="all, delete-orphan"
+    )
+    tags = db.relationship(
+        "Tag", back_populates="user", cascade="all, delete-orphan"
+    )
 
 class Pending(db.Model):
     __tablename__ = 'pendings'
@@ -45,7 +59,11 @@ class Pending(db.Model):
     password = db.Column(db.String(255), nullable = False)
     code = db.Column(db.String(255), nullable = False)
     expires_at = db.Column(db.DateTime(timezone = True), default = lambda: utcnow() + timedelta(hours=24))
-    role_id = db.Column(db.Integer, db.ForeignKey("roles.id"), nullable = False)
+    role_id = db.Column(
+        db.Integer,
+        db.ForeignKey("roles.id", ondelete="CASCADE"),
+        nullable = False,
+    )
 
     role = db.relationship("Role", back_populates = "pendings")
 
@@ -55,14 +73,25 @@ class Directory(db.Model):
 
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(100), nullable = False)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
-    parent_id = db.Column(db.Integer, db.ForeignKey("directories.id")) #null significa que es root
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable = False,
+    )
+    parent_id = db.Column(
+        db.Integer,
+        db.ForeignKey("directories.id", ondelete="CASCADE"),
+    ) #null significa que es root
 
     user = db.relationship("User", back_populates="directories")
     parent = db.relationship("Directory", remote_side=[id], back_populates="children")
-    children = db.relationship("Directory", back_populates="parent")
-    
-    notes = db.relationship("Note", back_populates="directory")  # Added missing relationship
+    children = db.relationship(
+        "Directory", back_populates="parent", cascade="all, delete"
+    )
+
+    notes = db.relationship(
+        "Note", back_populates="directory", cascade="all, delete"
+    )
 
 note_tags = db.Table(
     "note_tags",
@@ -81,12 +110,22 @@ class Note(db.Model):
     modified_at = db.Column(db.DateTime(timezone = True), default = utcnow)
     deleted_at = db.Column(db.DateTime(timezone = True))
     to_delete = db.Column(db.Boolean, default = False)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
-    directory_id = db.Column(db.Integer, db.ForeignKey("directories.id"), nullable = True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable = False,
+    )
+    directory_id = db.Column(
+        db.Integer,
+        db.ForeignKey("directories.id", ondelete="CASCADE"),
+        nullable = True,
+    )
 
     user = db.relationship("User", back_populates = "notes")
     directory = db.relationship("Directory", back_populates = "notes")
-    collabs = db.relationship("Collab", back_populates="note")
+    collabs = db.relationship(
+        "Collab", back_populates="note", cascade="all, delete-orphan"
+    )
     tags = db.relationship("Tag", secondary=note_tags, back_populates="notes", lazy="select")
 
 class Collab(db.Model):
@@ -94,8 +133,16 @@ class Collab(db.Model):
 
     id = db.Column(db.Integer, primary_key = True)
     permission = db.Column(db.Enum("view","edit"), nullable = False)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
-    note_id = db.Column(db.Integer, db.ForeignKey("notes.id"), nullable = False)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable = False,
+    )
+    note_id = db.Column(
+        db.Integer,
+        db.ForeignKey("notes.id", ondelete="CASCADE"),
+        nullable = False,
+    )
 
     user = db.relationship("User", back_populates = "collabs")
     note = db.relationship("Note", back_populates = "collabs")
@@ -106,7 +153,11 @@ class Tag(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     nombre = db.Column(db.String(100), nullable = False)
     color = db.Column(db.String(7), nullable = False, default="#6d6df6") #color en hex como: #ffffff
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable = False,
+    )
 
     user = db.relationship("User", back_populates="tags")
     notes = db.relationship("Note", secondary=note_tags, back_populates="tags", lazy="select")

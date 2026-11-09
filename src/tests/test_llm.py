@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 from config import Config
 from src import create_app
-from src.llm.gemini import LlmError, generate_text
+from src.services.gemini import LlmError, generate_text
 
 
 def make_app(**overrides):
@@ -31,31 +31,32 @@ class GeminiServiceTestCase(unittest.TestCase):
 
         self.assertIn("GOOGLE_LLM_API_KEY", str(context.exception))
 
-    def test_generate_text_reads_candidate(self):
+    def test_generate_text_returns_output(self):
         app = make_app()
-        response = Mock(status_code=200)
-        response.json.return_value = {
-            "candidates": [{"content": {"parts": [{"text": "  respuesta  "}]}}]
-        }
+        client = Mock()
+        client.interactions.create.return_value = Mock(output_text="  respuesta  ")
 
         with app.app_context(), patch(
-            "src.llm.gemini.requests.post", return_value=response
-        ) as post:
+            "src.services.gemini.genai.Client", return_value=client
+        ) as client_class:
             result = generate_text("hola")
 
         self.assertEqual(result, "respuesta")
-        _, kwargs = post.call_args
-        self.assertEqual(kwargs["params"], {"key": "test-key"})
-        self.assertIn("gemini-test:generateContent", post.call_args.args[0])
+        client_class.assert_called_once_with(api_key="test-key")
+        client.interactions.create.assert_called_once_with(
+            model="gemini-test",
+            input="hola",
+        )
 
-    def test_http_error_raises(self):
+    def test_sdk_error_raises(self):
         app = make_app()
-        response = Mock(status_code=429)
+        client = Mock()
+        client.interactions.create.side_effect = RuntimeError("boom")
 
         with app.app_context(), patch(
-            "src.llm.gemini.requests.post", return_value=response
+            "src.services.gemini.genai.Client", return_value=client
         ):
             with self.assertRaises(LlmError) as context:
                 generate_text("hola")
 
-        self.assertIn("rechazó", str(context.exception))
+        self.assertIn("No se pudo conectar", str(context.exception))

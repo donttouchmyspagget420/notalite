@@ -75,6 +75,21 @@
       );
     });
 
+    out = out.replace(
+      /!\[([^\]]*)\]\(((?:https?:\/\/|\/)[^)\s]+)\)/g,
+      function (_, alt, src) {
+        const safeAlt = alt.replace(/"/g, "&quot;");
+        const safeSrc = src.replace(/"/g, "%22");
+        return (
+          '<img class="markdown-img" src="' +
+          safeSrc +
+          '" alt="' +
+          safeAlt +
+          '" loading="lazy">'
+        );
+      }
+    );
+
     out = out.replace(/`([^`]+)`/g, "<code>$1</code>");
     out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
     out = out.replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>");
@@ -271,7 +286,7 @@
           window.confirm(
             "¿Eliminar la carpeta «" +
               folderName +
-              "»? Sus notas se moverán a otra carpeta."
+              "»? También se eliminarán sus subcarpetas y notas."
           )
         ) {
           submitPost(withId(appShell.dataset.deleteFolderUrl, folderId), {});
@@ -570,6 +585,225 @@
       }, 1600);
     });
   });
+
+  /* -------------------------------------------------------
+     Images in notes (UC-13)
+     ------------------------------------------------------- */
+  const imageInput = qs("#editorImageInput");
+  const imageButton = qs("[data-image-upload]");
+
+  function insertAtCursor(snippet) {
+    if (!editorSource || !snippet) return;
+
+    const value = editorSource.value;
+    const start =
+      typeof editorSource.selectionStart === "number"
+        ? editorSource.selectionStart
+        : value.length;
+    const end =
+      typeof editorSource.selectionEnd === "number"
+        ? editorSource.selectionEnd
+        : start;
+    const before = value.slice(0, start);
+    const after = value.slice(end);
+    const prefix = before && !before.endsWith("\n") ? "\n\n" : "";
+    const suffix = "\n";
+    const insert = prefix + snippet + suffix;
+
+    editorSource.value = before + insert + after;
+    const position = start + insert.length;
+    editorSource.setSelectionRange(position, position);
+    editorSource.focus();
+    editorSource.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  async function uploadEditorImage(file) {
+    const uploadUrl = imageInput ? imageInput.dataset.uploadUrl : "";
+
+    if (!file || !uploadUrl) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("alt", file.name.replace(/\.[^.]+$/, ""));
+
+    markSaving();
+
+    try {
+      const response = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "X-CSRFToken": csrfToken() },
+        body: formData
+      });
+      const data = await response.json().catch(function () {
+        return {};
+      });
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || "No se pudo subir la imagen.");
+      }
+
+      insertAtCursor(data.markdown || "![](" + data.url + ")");
+    } catch (error) {
+      markSaveError();
+      window.alert(error.message || "No se pudo subir la imagen.");
+    } finally {
+      if (imageInput) imageInput.value = "";
+    }
+  }
+
+  if (imageButton && imageInput) {
+    imageButton.addEventListener("click", function () {
+      if (editorSource && editorSource.readOnly) return;
+      imageInput.click();
+    });
+
+    imageInput.addEventListener("change", function () {
+      if (imageInput.files && imageInput.files[0]) {
+        uploadEditorImage(imageInput.files[0]);
+      }
+    });
+  }
+
+  /* -------------------------------------------------------
+     Share note (UC-07)
+     ------------------------------------------------------- */
+  const shareModal = qs("#shareNoteModal");
+  const shareForm = qs("#shareForm");
+  const shareSearch = qs("[data-share-search]");
+  const shareResults = qs("#shareUserResults");
+  const shareSelected = qs("#shareSelected");
+  const shareUserId = qs("#shareUserId");
+  let shareTimer = null;
+
+  function clearShareSelection() {
+    if (shareUserId) shareUserId.value = "";
+    if (shareSelected) {
+      shareSelected.textContent = "";
+      shareSelected.classList.add("d-none");
+    }
+  }
+
+  function selectShareUser(user) {
+    if (!shareUserId || !shareSelected) return;
+
+    shareUserId.value = String(user.id);
+    shareSelected.textContent = "";
+    shareSelected.classList.remove("d-none");
+
+    const name = document.createElement("b");
+    name.textContent = user.name;
+
+    const email = document.createElement("span");
+    email.textContent = "· " + user.email;
+
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.className = "share-clear";
+    clear.setAttribute("aria-label", "Quitar selección");
+    clear.textContent = "×";
+    clear.addEventListener("click", clearShareSelection);
+
+    shareSelected.append(name, email, clear);
+
+    if (shareResults) shareResults.textContent = "";
+  }
+
+  function renderShareUsers(users) {
+    if (!shareResults) return;
+
+    shareResults.textContent = "";
+
+    if (!users.length) {
+      const empty = document.createElement("div");
+      empty.className = "share-result-empty";
+      empty.textContent = "No encontramos cuentas con ese dato.";
+      shareResults.appendChild(empty);
+      return;
+    }
+
+    users.forEach(function (user) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "share-result";
+
+      const avatar = document.createElement("span");
+      avatar.className = "avatar avatar-sm";
+      avatar.textContent = (user.name || "?").slice(0, 1).toUpperCase();
+
+      const info = document.createElement("span");
+      info.className = "share-result-info";
+
+      const name = document.createElement("b");
+      name.textContent = user.name;
+
+      const email = document.createElement("span");
+      email.textContent = user.email;
+
+      info.append(name, email);
+      button.append(avatar, info);
+      button.addEventListener("click", function () {
+        selectShareUser(user);
+        if (shareSearch) {
+          shareSearch.value = "";
+          shareSearch.focus();
+        }
+      });
+
+      shareResults.appendChild(button);
+    });
+  }
+
+  async function searchShareUsers() {
+    if (!shareModal || !shareSearch || !shareResults) return;
+
+    const baseUrl = shareModal.dataset.shareSearchUrl;
+    if (!baseUrl) return;
+
+    const query = shareSearch.value.trim();
+    const url = baseUrl + "?q=" + encodeURIComponent(query);
+
+    try {
+      const response = await fetch(url, {
+        headers: { Accept: "application/json" }
+      });
+      if (!response.ok) throw new Error("search failed");
+      const data = await response.json();
+      renderShareUsers(data.users || []);
+    } catch (error) {
+      renderShareUsers([]);
+    }
+  }
+
+  if (shareModal && shareSearch) {
+    shareSearch.addEventListener("input", function () {
+      clearShareSelection();
+      window.clearTimeout(shareTimer);
+      shareTimer = window.setTimeout(searchShareUsers, 220);
+    });
+
+    shareSearch.addEventListener("focus", searchShareUsers);
+
+    if (shareForm) {
+      shareForm.addEventListener("submit", function (event) {
+        if (!shareUserId || !shareUserId.value) {
+          event.preventDefault();
+          if (shareResults) {
+            shareResults.textContent = "";
+            const hint = document.createElement("div");
+            hint.className = "share-result-empty";
+            hint.textContent = "Elegí una cuenta de la lista para compartir.";
+            shareResults.appendChild(hint);
+          }
+        }
+      });
+    }
+
+    shareModal.addEventListener("hidden.bs.modal", function () {
+      clearShareSelection();
+      shareSearch.value = "";
+      if (shareResults) shareResults.textContent = "";
+    });
+  }
 
   /* -------------------------------------------------------
      Export / import (UC-12)

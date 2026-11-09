@@ -1,4 +1,4 @@
-from tests.base import BaseTestCase
+from src.tests.base import BaseTestCase
 
 
 class PageSmokeTestCase(BaseTestCase):

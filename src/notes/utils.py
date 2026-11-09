@@ -9,7 +9,7 @@ from sqlalchemy import func
 
 from src.enums import NoteLength, TimeUnit
 from src.extensions import db
-from src.models import Directory, Note, Tag, note_tags
+from src.models import Collab, Directory, Note, Tag, note_tags
 from src.notes.exporters import build_pdf
 
 
@@ -60,6 +60,14 @@ def note_title_from_markdown(filename, content):
 
 def active_notes():
     return Note.query.filter(Note.user_id == current_user.id, Note.to_delete == False)
+
+
+def shared_with_me():
+    return (
+        Note.query.join(Collab, Collab.note_id == Note.id)
+        .filter(Collab.user_id == current_user.id, Note.to_delete == False)
+        .order_by(Note.modified_at.desc())
+    )
 
 
 def user_tags():
@@ -120,13 +128,47 @@ def directory_breadcrumbs(directory):
     return list(reversed(breadcrumbs))
 
 
-def note_or_404(note_id):
+def note_owner_or_404(note_id):
     note = Note.query.filter_by(id=note_id, user_id=current_user.id).first()
 
     if not note:
         abort(404)
 
     return note
+
+
+def note_or_404(note_id):
+    """Kept for owner-only actions such as moving or deleting a note."""
+    return note_owner_or_404(note_id)
+
+
+def note_for_access(note_id, write=False):
+    """Return a note visible to the current user and whether it is editable.
+
+    Owners always have full access. Collaborators get read access and, when
+    their permission is ``edit``, write access as well.
+    """
+    note = Note.query.filter_by(id=note_id).first()
+
+    if not note:
+        abort(404)
+
+    if note.user_id == current_user.id:
+        return note, True
+
+    collab = Collab.query.filter_by(
+        note_id=note.id, user_id=current_user.id
+    ).first()
+
+    if not collab:
+        abort(404)
+
+    can_edit = collab.permission == "edit"
+
+    if write and not can_edit:
+        abort(403)
+
+    return note, can_edit
 
 
 def safe_next(default_endpoint, **values):
@@ -169,6 +211,7 @@ def sidebar_data():
     total_notes = Note.query.filter(
         Note.user_id == current_user.id, Note.to_delete == False
     ).count()
+    shared_count = shared_with_me().count()
 
     name_parts = (current_user.name or "").split()
     initials = "".join(part[0] for part in name_parts[:2]).upper()
@@ -182,6 +225,7 @@ def sidebar_data():
         "directory_note_counts": note_counts,
         "sidebar_tags": [(tag, tag_counts.get(tag.id, 0)) for tag in tags],
         "total_notes": total_notes,
+        "shared_count": shared_count,
         "user_initials": initials,
     }
 

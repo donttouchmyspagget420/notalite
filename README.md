@@ -15,26 +15,42 @@ NotaLite/
 ├── .flaskenv                //FLASK_APP=src para usar la CLI sin --app
 ├── config.py               //configuracion leida del .env
 ├── requirements.txt
+├── docs/                   //documentacion y mockups
 ├── instance/               //base de datos sqlite local
 ├── static/                 //css, js e imagenes
 ├── templates/              //vistas Jinja2
 └── src/
     ├── __init__.py         //fabrica create_app() y registro de blueprints
     ├── extensions.py       //db, bcrypt, csrf, login_manager, mail
-    ├── models.py           //modelos de SQLAlchemy
-    ├── cli.py              //comandos flask db
+    ├── models.py           //modelos de SQLAlchemy y reglas de cascada
+    ├── cli.py              //comandos flask db y flask tests
     ├── seed.py             //datos de prueba
-    ├── main/
-    │   ├── __init__.py     //blueprint main
-    │   └── routes.py       //ruta /
     ├── auth/
     │   ├── __init__.py     //blueprint auth
     │   └── routes.py       //login, signup y verificacion
+    ├── enums/
+    │   └── *.py            //limites y constantes de la aplicacion
+    ├── main/
+    │   ├── __init__.py     //blueprint main
+    │   └── routes.py       //ruta /
+    ├── notes/
+    │   ├── __init__.py     //blueprint notes
+    │   ├── routes.py       //notas, carpetas, etiquetas y compartir
+    │   ├── utils.py        //helpers de acceso y barra lateral
+    │   └── exporters.py    //exportacion a Markdown y PDF
     ├── services/
-    │   └── mailer.py       //envio de correos
-        └── gemini.py       //asistente de IA para el editor
+    │   ├── forms.py        //formularios y validacion WTForms
+    │   ├── gemini.py       //asistente de IA para el editor
+    │   ├── google.py       //OAuth con Google
+    │   ├── mailer.py       //envio de correos
+    │   └── storage.py      //imagenes en disco local o S3
     ├── settings/
-    │   └── routes.py       //perfil, contraseña y tema
+    │   ├── __init__.py     //blueprint settings
+    │   └── routes.py       //perfil, contraseña, tema e import/export
+    └── tests/
+        ├── base.py         //configuracion base de los tests
+        ├── test_models.py  //cascadas y relaciones
+        └── test_*.py       //tests de la aplicacion
 ```
 
 ## Intalacion
@@ -94,11 +110,51 @@ Configurá una clave de Google Gemini en `.env`:
 
 `GOOGLE_LLM_MODEL=gemini-2.0-flash`
 
+## Imágenes en notas
+
+Desde el editor podés insertar imágenes con el botón «Imagen». Se guardan en
+`UPLOAD_FOLDER` (por defecto `storage/`) y se insertan en el Markdown como
+`![descripción](url)`.
+
+Para guardarlas en Amazon S3 (o un servicio compatible con S3) configurá en
+`.env`:
+
+`STORAGE_BACKEND=s3`
+
+`AWS_REGION=us-east-1`
+
+`AWS_S3_BUCKET=tu-bucket`
+
+`AWS_ACCESS_KEY_ID=...`
+
+`AWS_SECRET_ACCESS_KEY=...`
+
+Opcionalmente podés definir `AWS_S3_PREFIX`, `AWS_S3_PUBLIC_URL`,
+`AWS_S3_ENDPOINT_URL` y `AWS_S3_ACL`.
+
+## Compartir notas
+
+El botón «Compartir» del editor permite buscar una cuenta por nombre o email,
+elegir el permiso (solo lectura o edición) y administrar quién tiene acceso.
+Las notas compartidas aparecen en «Compartidas» dentro de la barra lateral.
+
 ## Tests
 
-`python -m unittest discover -s tests -v`
+`flask tests run`
+
+También se puede ejecutar un módulo, clase o test concreto:
+
+`flask tests run src.tests.test_notes`
+
+`flask tests run src.tests.test_notes.NotesTestCase.test_export_pdf`
+
+O usar `unittest` directamente:
+
+`python -m unittest discover -s src/tests -v`
 
 ## Herramientas
+
+`flask tests run //ejecutar los tests`
 
 `flask db init //crear la base de datos`
 

@@ -1,9 +1,9 @@
 from unittest.mock import patch
 
 from src.extensions import db
-from src.llm.gemini import LlmError
 from src.models import Note
-from tests.base import BaseTestCase
+from src.services.gemini import LlmError
+from src.tests.base import BaseTestCase
 
 
 class AiAssistTestCase(BaseTestCase):

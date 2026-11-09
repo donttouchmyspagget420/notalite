@@ -1,6 +1,6 @@
 from src.extensions import db
 from src.models import Tag
-from tests.base import BaseTestCase
+from src.tests.base import BaseTestCase
 
 
 class TagsTestCase(BaseTestCase):

@@ -1,3 +1,6 @@
+import os
+import unittest
+
 import click
 from flask.cli import with_appcontext
 from sqlalchemy import inspect, text
@@ -10,10 +13,35 @@ def tests_cli():
     """Utilidades de tests."""
 
 @tests_cli.command("run")
-@with_appcontext
-# TODO: make it run tests
-def run():
-    print("running tests")
+@click.option(
+    "--verbose/--quiet",
+    default=True,
+    help="Muestra el resultado de cada test.",
+)
+@click.option("--failfast", is_flag=True, help="Detiene la ejecución al primer fallo.")
+@click.argument("names", nargs=-1, metavar="[TEST ...]")
+def run(verbose, failfast, names):
+    """Ejecuta la suite de tests.
+
+    Sin argumentos corre todos los tests. También se puede indicar un módulo,
+    clase o test concreto, por ejemplo:
+
+        flask tests run src.tests.test_notes
+        flask tests run src.tests.test_notes.NotesTestCase.test_export_pdf
+    """
+    tests_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tests")
+    loader = unittest.TestLoader()
+
+    if names:
+        suite = loader.loadTestsFromNames(names)
+    else:
+        suite = loader.discover(tests_dir)
+
+    runner = unittest.TextTestRunner(verbosity=2 if verbose else 1, failfast=failfast)
+    result = runner.run(suite)
+
+    if not result.wasSuccessful():
+        raise click.exceptions.Exit(1)
 
 
 @click.group("db")
@@ -91,4 +119,5 @@ def check():
 
 
 def init_app(app):
-    app.cli.add_command(db_cli,tests_cli)
+    app.cli.add_command(db_cli)
+    app.cli.add_command(tests_cli)

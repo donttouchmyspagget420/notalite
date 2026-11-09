@@ -1,6 +1,6 @@
 from src.extensions import bcrypt, db
 from src.models import User
-from tests.base import BaseTestCase
+from src.tests.base import BaseTestCase
 
 
 class SettingsTestCase(BaseTestCase):

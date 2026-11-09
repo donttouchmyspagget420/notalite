@@ -1,0 +1,56 @@
+{% extends "layouts/app.html" %}
+{% from "components/note_row.html" import note_row %}
+
+{% set active_nav = 'shared' %}
+
+{% block title %}NotaLite - Compartidas conmigo{% endblock %}
+
+{% block app_content %}
+    <div class="app-mainbar">
+        <span class="app-mainbar-title">Compartidas conmigo</span>
+        <span class="app-mainbar-sub">{{ notes|length }} notas</span>
+    </div>
+
+    <div class="app-content">
+        {% if notes %}
+            <div class="note-list">
+                {% for note in notes %}
+                    {% call note_row(
+                        note.title,
+                        (note.directory.name if note.directory else 'Sin carpeta') ~ ' · de ' ~ note.user.name ~ ' · ' ~ (note.modified_at|timeago),
+                        avatar=note.user.name[:1]|upper,
+                        avatar_class='a2',
+                        time=note.modified_at|timeago,
+                        href=url_for('notes.edit_note', note_id=note.id)
+                    ) %}
+                        {% if permissions.get(note.id) == 'edit' %}
+                            <span class="chip chip-ok">Puede editar</span>
+                        {% else %}
+                            <span class="chip chip-warn">Solo lectura</span>
+                        {% endif %}
+                        {% for tag in note.tags %}
+                            {% if tag.user_id == current_user.id %}
+                                <a class="chip chip-tag"
+                                   href="{{ url_for('notes.tags', tag_id=tag.id) }}">
+                                    <span class="tag-dot" style="--tag-color: {{ tag.color }}"></span>
+                                    #{{ tag.nombre }}
+                                </a>
+                            {% else %}
+                                <span class="chip chip-tag">
+                                    <span class="tag-dot" style="--tag-color: {{ tag.color }}"></span>
+                                    #{{ tag.nombre }}
+                                </span>
+                            {% endif %}
+                        {% endfor %}
+                    {% endcall %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="app-empty-hint">
+                <i class="bi bi-share"></i>
+                <b>No hay notas compartidas con vos</b>
+                <span>Cuando alguien comparta una nota, aparecerá acá.</span>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

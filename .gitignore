@@ -4,3 +4,4 @@ __pycache__
 *.db
 .flaskenv
 TODO.md
+storage/

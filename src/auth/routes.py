@@ -7,27 +7,30 @@ from flask_login import login_user, logout_user
 from src.auth import bp
 from src.extensions import bcrypt, db
 from src.models import User,Pending
+from src.services.forms import LoginForm, SignupForm, VerificationForm, form_error
 from src.services.mailer import send_verification_code
 from src.services.google import getUserInfo,googleUri
 
 
 @bp.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
+    form = LoginForm()
 
-        if not email or not password:
-            flash("Todos los campos son obligatorios", "danger")
-        else:
-            user = User.query.filter_by(email=email).first()
-            if user and bcrypt.check_password_hash(user.password, password):
-                login_user(user)
-                flash("Logueado correctamente", "success")
-                return redirect(url_for("notes.list_notes"))
-            flash("Contraseña o email incorrecto", "warning")
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
 
-    return render_template("auth/login.html")
+        if user and user.password and bcrypt.check_password_hash(
+            user.password, form.password.data
+        ):
+            login_user(user)
+            flash("Logueado correctamente", "success")
+            return redirect(url_for("notes.list_notes"))
+
+        flash("Contraseña o email incorrecto", "warning")
+    elif request.method == "POST":
+        flash(form_error(form), "danger")
+
+    return render_template("auth/login.html", form=form)
 
 
 @bp.route("/logout")
@@ -40,53 +43,66 @@ def logout():
 
 @bp.route("/signup", methods=["GET", "POST"])
 def signup():
-    if request.method == "POST":
-        name = request.form.get("name")
-        surname = request.form.get("surname")
-        email = request.form.get("email")
-        password = request.form.get("password")
-        confirm = request.form.get("confirm_password")
+    form = SignupForm()
 
-        if not email or not password or not confirm:
-            flash("Todos los campos son obligatorios", "danger")
-        elif User.query.filter_by(email=email).first():
+    if form.validate_on_submit():
+        email = form.email.data
+
+        if User.query.filter_by(email=email).first():
             flash("El usuario ya existe", "warning")
-        elif password != confirm:
-            flash("Las contraseñas deben coincidir", "warning")
         else:
             code = f"{random.randint(100000, 999999)}"
+            password_hash = bcrypt.generate_password_hash(
+                form.password.data
+            ).decode("utf-8")
 
-            pending = Pending(
-                name=name + " " + surname,
-                email=email,
-                password=bcrypt.generate_password_hash(password),
-                role_id=1,
-                code=code
-            )
+            pending = Pending.query.filter_by(email=email).first()
 
-            db.session.add(pending)
+            if pending:
+                pending.name = f"{form.name.data} {form.surname.data}"
+                pending.password = password_hash
+                pending.code = code
+                pending.role_id = 1
+            else:
+                pending = Pending(
+                    name=f"{form.name.data} {form.surname.data}",
+                    email=email,
+                    password=password_hash,
+                    role_id=1,
+                    code=code,
+                )
+                db.session.add(pending)
+
             db.session.commit()
 
-            session["pending_signup_email"] = pending.email; 
+            session["pending_signup_email"] = pending.email
             send_verification_code(email, code)
 
             return render_template("email_verification.html")
+    elif request.method == "POST":
+        flash(form_error(form), "danger")
 
-    return render_template("auth/signup.html")
+    return render_template("auth/signup.html", form=form)
 
 
 @bp.route("/mail/verification", methods=["POST"])
 def email_verification():
-    pending = Pending.query.filter_by(email=session["pending_signup_email"]).first()
+    email = session.get("pending_signup_email")
+    pending = Pending.query.filter_by(email=email).first() if email else None
+
     if not pending:
         flash("La sesión expiró, vuelve a registrarte", "warning")
         return redirect(url_for("auth.signup"))
 
-    code_form = request.form.get("code_form")
+    form = VerificationForm()
 
-    if code_form != pending.code:
+    if not form.validate_on_submit():
+        flash(form_error(form), "warning")
+        return render_template("email_verification.html", form=form)
+
+    if form.code_form.data != pending.code:
         flash("El código no es correcto", "warning")
-        return render_template("email_verification.html")
+        return render_template("email_verification.html", form=form)
 
     user = User(
         name=pending.name,
@@ -96,6 +112,7 @@ def email_verification():
     )
 
     db.session.add(user)
+    db.session.delete(pending)
     db.session.commit()
     session.pop("pending_signup_email", None)
 

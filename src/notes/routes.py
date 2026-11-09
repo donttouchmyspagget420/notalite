@@ -1,12 +1,30 @@
-from flask import flash, jsonify, redirect, render_template, request, url_for
+from flask import (
+    abort,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    url_for,
+)
 from flask_login import current_user, login_required
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from werkzeug.utils import secure_filename
 
 from src.enums import ImportLimit, NoteLength
 from src.extensions import db
+from src.services.forms import (
+    FolderForm,
+    ImageUploadForm,
+    MoveNoteForm,
+    ShareNoteForm,
+    TagForm,
+    form_error,
+)
 from src.services.gemini import LlmError, generate_text
-from src.models import Directory, Note, Tag, note_tags, utcnow
+from src.services.storage import StorageError, save_image, upload_root
+from src.models import Collab, Directory, Note, Tag, User, note_tags, utcnow
 from src.notes import bp
 from src.notes.utils import (
     active_notes,
@@ -15,9 +33,12 @@ from src.notes.utils import (
     directory_or_none,
     export_response,
     grouped_notes_by_directory,
+    note_for_access,
     note_or_404,
+    note_owner_or_404,
     note_title_from_markdown,
     safe_next,
+    shared_with_me,
     sidebar_data,
     slugify,
     tag_or_404,
@@ -34,6 +55,22 @@ bp.add_app_template_filter(time_ago, "timeago")
 def list_notes():
     notes = active_notes().order_by(Note.modified_at.desc()).all()
     return render_template("notes/list.html", notes=notes, **sidebar_data())
+
+
+@bp.route("/shared")
+@login_required
+def shared_notes():
+    notes = shared_with_me().all()
+    permissions = {
+        collab.note_id: collab.permission
+        for collab in Collab.query.filter_by(user_id=current_user.id).all()
+    }
+    return render_template(
+        "notes/shared.html",
+        notes=notes,
+        permissions=permissions,
+        **sidebar_data(),
+    )
 
 
 @bp.route("/create", methods=["POST"])
@@ -81,12 +118,15 @@ def create_note():
 @bp.route("/<int:note_id>")
 @login_required
 def edit_note(note_id):
-    note = note_or_404(note_id)
+    note, can_edit = note_for_access(note_id)
     note_tag_ids = {tag.id for tag in note.tags}
+    is_owner = note.user_id == current_user.id
 
     return render_template(
         "notes/editor.html",
         note=note,
+        can_edit=can_edit,
+        is_owner=is_owner,
         note_tag_ids=note_tag_ids,
         word_count=len((note.content or "").split()),
         **sidebar_data(),
@@ -96,7 +136,7 @@ def edit_note(note_id):
 @bp.route("/<int:note_id>/save", methods=["POST"])
 @login_required
 def save_note(note_id):
-    note = note_or_404(note_id)
+    note, _ = note_for_access(note_id, write=True)
     payload = request.get_json(silent=True) or request.form
 
     title = (payload.get("title") or note.title or "Nota sin título").strip()
@@ -121,7 +161,7 @@ def save_note(note_id):
 @bp.route("/<int:note_id>/ai", methods=["POST"])
 @login_required
 def ai_assist(note_id):
-    note = note_or_404(note_id)
+    note, _ = note_for_access(note_id, write=True)
     payload = request.get_json(silent=True)
 
     if not isinstance(payload, dict):
@@ -170,7 +210,7 @@ def ai_assist(note_id):
 @bp.route("/<int:note_id>/tags", methods=["POST"])
 @login_required
 def update_note_tags(note_id):
-    note = note_or_404(note_id)
+    note = note_owner_or_404(note_id)
     tag_ids = []
 
     for value in request.form.getlist("tag_ids"):
@@ -195,7 +235,7 @@ def update_note_tags(note_id):
 @bp.route("/<int:note_id>/tags/<int:tag_id>/remove", methods=["POST"])
 @login_required
 def remove_note_tag(note_id, tag_id):
-    note = note_or_404(note_id)
+    note = note_owner_or_404(note_id)
     tag = tag_or_404(tag_id)
 
     if tag in note.tags:
@@ -210,8 +250,14 @@ def remove_note_tag(note_id, tag_id):
 @bp.route("/<int:note_id>/move", methods=["POST"])
 @login_required
 def move_note(note_id):
-    note = note_or_404(note_id)
-    directory_value = request.form.get("directory_id", "")
+    note = note_owner_or_404(note_id)
+    form = MoveNoteForm()
+
+    if not form.validate_on_submit():
+        flash(form_error(form), "warning")
+        return safe_next("notes.list_notes")
+
+    directory_value = form.directory_id.data or ""
     directory = directory_or_none(directory_value)
 
     if directory_value and not directory:
@@ -233,7 +279,7 @@ def move_note(note_id):
 @bp.route("/<int:note_id>/delete", methods=["POST"])
 @login_required
 def delete_note(note_id):
-    note = note_or_404(note_id)
+    note = note_owner_or_404(note_id)
     note.to_delete = True
     note.deleted_at = utcnow()
     db.session.commit()
@@ -245,8 +291,127 @@ def delete_note(note_id):
 @bp.route("/<int:note_id>/export/<string:export_format>")
 @login_required
 def export_note(note_id, export_format):
-    note = note_or_404(note_id)
+    note, _ = note_for_access(note_id)
     return export_response(note, export_format)
+
+
+@bp.route("/<int:note_id>/images", methods=["POST"])
+@login_required
+def upload_note_image(note_id):
+    note_for_access(note_id, write=True)
+    form = ImageUploadForm()
+
+    if not form.validate_on_submit():
+        return jsonify(ok=False, error=form_error(form)), 400
+
+    try:
+        image_url = save_image(form.image.data, current_user.id)
+    except StorageError as error:
+        return jsonify(ok=False, error=str(error)), 400
+
+    alt = (form.alt.data or "Imagen").replace("[", "").replace("]", "").strip()
+    alt = alt or "Imagen"
+
+    return jsonify(
+        ok=True,
+        url=image_url,
+        markdown=f"![{alt}]({image_url})",
+    )
+
+
+@bp.route("/uploads/<path:filename>")
+@login_required
+def uploaded_image(filename):
+    return send_from_directory(upload_root(), filename)
+
+
+@bp.route("/<int:note_id>/share/search")
+@login_required
+def share_search(note_id):
+    note = note_owner_or_404(note_id)
+    query = (request.args.get("q") or "").strip()
+    excluded = {collab.user_id for collab in note.collabs}
+    excluded.add(current_user.id)
+
+    users = User.query.filter(~User.id.in_(excluded))
+
+    if query:
+        pattern = f"%{query}%"
+        users = users.filter(
+            or_(User.name.ilike(pattern), User.email.ilike(pattern))
+        )
+
+    users = users.order_by(func.lower(User.name)).limit(8).all()
+
+    return jsonify(
+        users=[
+            {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "avatar": user.avatar,
+            }
+            for user in users
+        ]
+    )
+
+
+@bp.route("/<int:note_id>/share", methods=["POST"])
+@login_required
+def share_note(note_id):
+    note = note_owner_or_404(note_id)
+    form = ShareNoteForm()
+
+    if not form.validate_on_submit():
+        flash(form_error(form), "warning")
+        return safe_next("notes.edit_note", note_id=note.id)
+
+    try:
+        user_id = int(form.user_id.data)
+    except (TypeError, ValueError):
+        flash("Elegí una cuenta válida para compartir.", "warning")
+        return safe_next("notes.edit_note", note_id=note.id)
+
+    user = db.session.get(User, user_id)
+
+    if not user or user.id == current_user.id:
+        flash("Elegí una cuenta válida para compartir.", "warning")
+        return safe_next("notes.edit_note", note_id=note.id)
+
+    collab = Collab.query.filter_by(note_id=note.id, user_id=user.id).first()
+
+    if collab:
+        collab.permission = form.permission.data
+        message = f"Permiso de {user.name} actualizado."
+    else:
+        db.session.add(
+            Collab(
+                permission=form.permission.data,
+                user_id=user.id,
+                note_id=note.id,
+            )
+        )
+        message = f"Nota compartida con {user.name}."
+
+    db.session.commit()
+    flash(message, "success")
+    return safe_next("notes.edit_note", note_id=note.id)
+
+
+@bp.route("/<int:note_id>/share/<int:user_id>/remove", methods=["POST"])
+@login_required
+def unshare_note(note_id, user_id):
+    note = note_owner_or_404(note_id)
+    collab = Collab.query.filter_by(note_id=note.id, user_id=user_id).first()
+
+    if not collab:
+        abort(404)
+
+    db.session.delete(collab)
+    db.session.commit()
+
+    flash("Se quitó el acceso a la nota.", "success")
+    return safe_next("notes.edit_note", note_id=note.id)
 
 
 @bp.route("/folders")
@@ -295,15 +460,16 @@ def folders_tree():
 @bp.route("/folders/create", methods=["POST"])
 @login_required
 def create_folder():
-    name = request.form.get("name", "").strip()
-    parent = directory_or_none(request.form.get("parent_id"))
+    form = FolderForm()
 
-    if not name:
-        flash("El nombre de la carpeta es obligatorio.", "warning")
+    if not form.validate_on_submit():
+        flash(form_error(form), "warning")
         return safe_next("notes.folders")
 
+    parent = directory_or_none(form.parent_id.data)
+
     directory = Directory(
-        name=name[:NoteLength.NAME],
+        name=form.name.data[:NoteLength.NAME],
         user_id=current_user.id,
         parent_id=parent.id if parent else None,
     )
@@ -319,12 +485,12 @@ def create_folder():
 @login_required
 def rename_folder(directory_id):
     directory = directory_or_404(directory_id)
-    name = request.form.get("name", "").strip()
+    form = FolderForm()
 
-    if not name:
-        flash("El nombre de la carpeta es obligatorio.", "warning")
+    if not form.validate_on_submit():
+        flash(form_error(form), "warning")
     else:
-        directory.name = name[:NoteLength.NAME]
+        directory.name = form.name.data[:NoteLength.NAME]
         db.session.commit()
         flash("Carpeta renombrada.", "success")
 
@@ -336,24 +502,19 @@ def rename_folder(directory_id):
 def delete_folder(directory_id):
     directory = directory_or_404(directory_id)
     fallback = directory.parent
-
-    Note.query.filter_by(user_id=current_user.id, directory_id=directory.id).update(
-        {Note.directory_id: fallback.id if fallback else None},
-        synchronize_session=False,
-    )
-
-    for child in list(directory.children):
-        child.parent_id = directory.parent_id
+    folder_name = directory.name
 
     db.session.delete(directory)
     db.session.commit()
 
+    flash(
+        f"Carpeta «{folder_name}» eliminada junto con sus subcarpetas y notas.",
+        "success",
+    )
+
     if fallback:
-        flash("Carpeta eliminada; sus notas se movieron a "
-              f"«{fallback.name}».", "success")
         return redirect(url_for("notes.folders", directory_id=fallback.id))
 
-    flash("Carpeta eliminada; sus notas quedaron sin carpeta.", "success")
     return redirect(url_for("notes.list_notes"))
 
 
@@ -393,7 +554,13 @@ def tags(tag_id=None):
 @bp.route("/tags/create", methods=["POST"])
 @login_required
 def create_tag():
-    name = request.form.get("name", "").strip().lstrip("#")
+    form = TagForm()
+
+    if not form.validate_on_submit():
+        flash(form_error(form), "warning")
+        return safe_next("notes.tags")
+
+    name = form.name.data.lstrip("#").strip()
 
     if not name:
         flash("El nombre de la etiqueta es obligatorio.", "warning")

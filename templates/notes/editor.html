@@ -12,8 +12,8 @@
 {% block app_content %}
     <div class="app-mainbar editor-mainbar">
         <a class="btn btn-app btn-app-ghost btn-app-sm"
-           href="{{ url_for('notes.folders', directory_id=note.directory.id) if note.directory else url_for('notes.list_notes') }}"
-           aria-label="{{ 'Volver a la carpeta' if note.directory else 'Volver a las notas' }}">
+           href="{{ url_for('notes.folders', directory_id=note.directory.id) if is_owner and note.directory else url_for('notes.list_notes') }}"
+           aria-label="{{ 'Volver a la carpeta' if is_owner and note.directory else 'Volver a las notas' }}">
             <i class="bi bi-arrow-left"></i>
         </a>
 
@@ -22,70 +22,104 @@
                type="text"
                value="{{ note.title }}"
                data-save-url="{{ url_for('notes.save_note', note_id=note.id) }}"
-               aria-label="Título de la nota">
+               aria-label="Título de la nota"
+               {% if not can_edit %}readonly{% endif %}>
 
         {% for tag in note.tags %}
-            <a class="chip chip-tag" href="{{ url_for('notes.tags', tag_id=tag.id) }}">
-                <span class="tag-dot" style="--tag-color: {{ tag.color }}"></span>
-                #{{ tag.nombre }}
-            </a>
+            {% if tag.user_id == current_user.id %}
+                <a class="chip chip-tag" href="{{ url_for('notes.tags', tag_id=tag.id) }}">
+                    <span class="tag-dot" style="--tag-color: {{ tag.color }}"></span>
+                    #{{ tag.nombre }}
+                </a>
+            {% else %}
+                <span class="chip chip-tag">
+                    <span class="tag-dot" style="--tag-color: {{ tag.color }}"></span>
+                    #{{ tag.nombre }}
+                </span>
+            {% endif %}
         {% endfor %}
 
         {% if note.directory %}
-            <a class="chip" href="{{ url_for('notes.folders', directory_id=note.directory.id) }}">
-                <i class="bi bi-folder2"></i> {{ note.directory.name }}
-            </a>
+            {% if is_owner %}
+                <a class="chip" href="{{ url_for('notes.folders', directory_id=note.directory.id) }}">
+                    <i class="bi bi-folder2"></i> {{ note.directory.name }}
+                </a>
+            {% else %}
+                <span class="chip">
+                    <i class="bi bi-folder2"></i> {{ note.directory.name }}
+                </span>
+            {% endif %}
         {% else %}
             <span class="chip">
                 <i class="bi bi-folder2"></i> Sin carpeta
             </span>
         {% endif %}
 
-        <div class="ms-auto d-flex align-items-center gap-2">
-            <span class="chip chip-ok" id="saveStatus">
-                <b>✓</b> Guardado · {{ note.modified_at.strftime('%H:%M') }}
+        {% if not is_owner %}
+            <span class="chip">
+                <i class="bi bi-person"></i>
+                Compartida por {{ note.user.name }}
             </span>
+        {% endif %}
 
-            <div class="dropdown">
-                <button class="btn btn-app btn-app-ghost"
-                        type="button"
-                        data-bs-toggle="dropdown"
-                        data-bs-auto-close="outside"
-                        aria-expanded="false"
-                        aria-label="Editar etiquetas">
-                    <i class="bi bi-tags"></i>
-                </button>
-                <form class="dropdown-menu dropdown-menu-end app-dropdown tag-picker"
-                      method="post"
-                      action="{{ url_for('notes.update_note_tags', note_id=note.id) }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="next" value="{{ request.path }}">
-                    <div class="tag-picker-title">Etiquetas de la nota</div>
-                    {% for tag, count in sidebar_tags %}
-                        <label class="tag-picker-item">
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   name="tag_ids"
-                                   value="{{ tag.id }}"
-                                   {% if tag.id in note_tag_ids %}checked{% endif %}>
-                            <span class="tag-dot" style="--tag-color: {{ tag.color }}"></span>
-                            <span>#{{ tag.nombre }}</span>
-                        </label>
-                    {% else %}
-                        <a class="tag-picker-empty" href="{{ url_for('notes.tags') }}">
-                            No hay etiquetas creadas. Crear una.
-                        </a>
-                    {% endfor %}
-                    <button class="btn btn-app btn-app-primary btn-app-sm w-100 mt-2" type="submit">
-                        Guardar etiquetas
+        <div class="ms-auto d-flex align-items-center gap-2">
+            {% if can_edit %}
+                <span class="chip chip-ok" id="saveStatus">
+                    <b>✓</b> Guardado · {{ note.modified_at.strftime('%H:%M') }}
+                </span>
+            {% else %}
+                <span class="chip chip-warn">
+                    <i class="bi bi-eye"></i> Solo lectura
+                </span>
+            {% endif %}
+
+            {% if is_owner %}
+                <div class="dropdown">
+                    <button class="btn btn-app btn-app-ghost"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            data-bs-auto-close="outside"
+                            aria-expanded="false"
+                            aria-label="Editar etiquetas">
+                        <i class="bi bi-tags"></i>
                     </button>
-                </form>
-            </div>
+                    <form class="dropdown-menu dropdown-menu-end app-dropdown tag-picker"
+                          method="post"
+                          action="{{ url_for('notes.update_note_tags', note_id=note.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        <div class="tag-picker-title">Etiquetas de la nota</div>
+                        {% for tag, count in sidebar_tags %}
+                            <label class="tag-picker-item">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       name="tag_ids"
+                                       value="{{ tag.id }}"
+                                       {% if tag.id in note_tag_ids %}checked{% endif %}>
+                                <span class="tag-dot" style="--tag-color: {{ tag.color }}"></span>
+                                <span>#{{ tag.nombre }}</span>
+                            </label>
+                        {% else %}
+                            <a class="tag-picker-empty" href="{{ url_for('notes.tags') }}">
+                                No hay etiquetas creadas. Crear una.
+                            </a>
+                        {% endfor %}
+                        <button class="btn btn-app btn-app-primary btn-app-sm w-100 mt-2" type="submit">
+                            Guardar etiquetas
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
 
-            <button class="btn btn-app" type="button" data-copy-link>
-                <i class="bi bi-share"></i>
-                Compartir
-            </button>
+            {% if is_owner %}
+                <button class="btn btn-app"
+                        type="button"
+                        data-bs-toggle="modal"
+                        data-bs-target="#shareNoteModal">
+                    <i class="bi bi-share"></i>
+                    Compartir
+                </button>
+            {% endif %}
 
             <div class="dropdown">
                 <button class="btn btn-app btn-app-ghost"
@@ -108,16 +142,18 @@
                             <i class="bi bi-file-earmark-pdf me-2"></i>Exportar a PDF
                         </a>
                     </li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <form method="post" action="{{ url_for('notes.delete_note', note_id=note.id) }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <input type="hidden" name="next" value="{{ url_for('notes.list_notes') }}">
-                            <button class="dropdown-item text-danger" type="submit">
-                                <i class="bi bi-trash3 me-2"></i>Mover a papelera
-                            </button>
-                        </form>
-                    </li>
+                    {% if is_owner %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="post" action="{{ url_for('notes.delete_note', note_id=note.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="next" value="{{ url_for('notes.list_notes') }}">
+                                <button class="dropdown-item text-danger" type="submit">
+                                    <i class="bi bi-trash3 me-2"></i>Mover a papelera
+                                </button>
+                            </form>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
@@ -130,91 +166,229 @@
             <button class="view-switch-btn" type="button" data-view="preview">Vista previa</button>
         </div>
 
-        <div class="dropdown editor-ai">
-            <button class="btn btn-app btn-app-ghost btn-app-sm"
-                    type="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                    aria-label="Asistente de IA">
-                <i class="bi bi-stars"></i>
-                IA
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end app-dropdown">
-                <li><h6 class="dropdown-header">Asistente de IA</h6></li>
-                <li><button class="dropdown-item" type="button" data-ai-action="summarize">Resumir</button></li>
-                <li><button class="dropdown-item" type="button" data-ai-action="improve">Mejorar redacción</button></li>
-                <li><button class="dropdown-item" type="button" data-ai-action="continue">Continuar texto</button></li>
-                <li><button class="dropdown-item" type="button" data-ai-action="translate">Traducir al inglés</button></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><button class="dropdown-item" type="button" data-ai-action="custom">Instrucción personalizada…</button></li>
-            </ul>
-        </div>
+        {% if can_edit %}
+            <div class="editor-tools">
+                <button class="btn btn-app btn-app-ghost btn-app-sm"
+                        type="button"
+                        data-image-upload
+                        aria-label="Insertar imagen">
+                    <i class="bi bi-image"></i>
+                    Imagen
+                </button>
+                <input id="editorImageInput"
+                       type="file"
+                       accept="image/png,image/jpeg,image/gif,image/webp"
+                       data-upload-url="{{ url_for('notes.upload_note_image', note_id=note.id) }}"
+                       hidden>
+
+                <div class="dropdown editor-ai">
+                    <button class="btn btn-app btn-app-ghost btn-app-sm"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            aria-label="Asistente de IA">
+                        <i class="bi bi-stars"></i>
+                        IA
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end app-dropdown">
+                        <li><h6 class="dropdown-header">Asistente de IA</h6></li>
+                        <li><button class="dropdown-item" type="button" data-ai-action="summarize">Resumir</button></li>
+                        <li><button class="dropdown-item" type="button" data-ai-action="improve">Mejorar redacción</button></li>
+                        <li><button class="dropdown-item" type="button" data-ai-action="continue">Continuar texto</button></li>
+                        <li><button class="dropdown-item" type="button" data-ai-action="translate">Traducir al inglés</button></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button class="dropdown-item" type="button" data-ai-action="custom">Instrucción personalizada…</button></li>
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
     </div>
 
     <div class="editor-body" id="editorBody" data-view="split">
         <textarea class="editor-source"
                   id="editorSource"
                   spellcheck="false"
-                  aria-label="Contenido Markdown">{{ note.content }}</textarea>
+                  aria-label="Contenido Markdown"
+                  {% if not can_edit %}readonly{% endif %}>{{ note.content }}</textarea>
 
         <div class="editor-preview markdown-body" id="editorPreview"></div>
     </div>
 
     <div class="editor-foot">
         <span><span id="wordCount">{{ word_count }}</span> palabras</span>
-        <span>Autoguardado cada 2 s tras escribir</span>
+        {% if can_edit %}
+            <span>Autoguardado cada 2 s tras escribir</span>
+        {% else %}
+            <span>Tenés permiso de solo lectura sobre esta nota.</span>
+        {% endif %}
         <span class="ms-auto">Markdown habilitado</span>
     </div>
 
-    <div class="modal fade"
-         id="aiModal"
-         tabindex="-1"
-         aria-labelledby="aiModalTitle"
-         aria-hidden="true"
-         data-ai-url="{{ url_for('notes.ai_assist', note_id=note.id) }}">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content app-modal">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="aiModalTitle">
-                        <i class="bi bi-stars"></i>
-                        Asistente de IA
-                    </h5>
-                    <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="ai-prompt-wrap d-none" id="aiPromptWrap">
-                        <label class="ai-label" for="aiPrompt">Instrucción</label>
-                        <textarea class="form-control app-input"
-                                  id="aiPrompt"
-                                  rows="2"
-                                  placeholder="Ej: convertí esto en una lista de pasos"></textarea>
-                        <button class="btn btn-app btn-app-primary btn-app-sm mt-2"
-                                type="button"
-                                id="aiGenerate">
-                            Generar
+    {% if can_edit %}
+        <div class="modal fade"
+             id="aiModal"
+             tabindex="-1"
+             aria-labelledby="aiModalTitle"
+             aria-hidden="true"
+             data-ai-url="{{ url_for('notes.ai_assist', note_id=note.id) }}">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content app-modal">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="aiModalTitle">
+                            <i class="bi bi-stars"></i>
+                            Asistente de IA
+                        </h5>
+                        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="ai-prompt-wrap d-none" id="aiPromptWrap">
+                            <label class="ai-label" for="aiPrompt">Instrucción</label>
+                            <textarea class="form-control app-input"
+                                      id="aiPrompt"
+                                      rows="2"
+                                      placeholder="Ej: convertí esto en una lista de pasos"></textarea>
+                            <button class="btn btn-app btn-app-primary btn-app-sm mt-2"
+                                    type="button"
+                                    id="aiGenerate">
+                                Generar
+                            </button>
+                        </div>
+
+                        <div class="ai-status" id="aiStatus"></div>
+
+                        <label class="ai-label" for="aiResult">Resultado</label>
+                        <textarea class="form-control app-input ai-result"
+                                  id="aiResult"
+                                  rows="10"
+                                  readonly></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-app btn-app-ghost" type="button" data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+                        <button class="btn btn-app btn-app-ghost" type="button" id="aiReplace" disabled>
+                            Reemplazar nota
+                        </button>
+                        <button class="btn btn-app btn-app-primary" type="button" id="aiInsert" disabled>
+                            Insertar
                         </button>
                     </div>
-
-                    <div class="ai-status" id="aiStatus"></div>
-
-                    <label class="ai-label" for="aiResult">Resultado</label>
-                    <textarea class="form-control app-input ai-result"
-                              id="aiResult"
-                              rows="10"
-                              readonly></textarea>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-app btn-app-ghost" type="button" data-bs-dismiss="modal">
-                        Cancelar
-                    </button>
-                    <button class="btn btn-app btn-app-ghost" type="button" id="aiReplace" disabled>
-                        Reemplazar nota
-                    </button>
-                    <button class="btn btn-app btn-app-primary" type="button" id="aiInsert" disabled>
-                        Insertar
-                    </button>
                 </div>
             </div>
         </div>
-    </div>
+    {% endif %}
+
+    {% if is_owner %}
+        <div class="modal fade"
+             id="shareNoteModal"
+             tabindex="-1"
+             aria-labelledby="shareNoteModalTitle"
+             aria-hidden="true"
+             data-share-search-url="{{ url_for('notes.share_search', note_id=note.id) }}">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content app-modal share-modal">
+                    <div class="modal-header">
+                        <h5 class="modal-title fs-6" id="shareNoteModalTitle">
+                            <i class="bi bi-share"></i>
+                            Compartir esta nota
+                        </h5>
+                        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="shareForm"
+                              method="post"
+                              action="{{ url_for('notes.share_note', note_id=note.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <input type="hidden" name="user_id" id="shareUserId">
+
+                            <label class="ai-label" for="shareUserSearch">Buscar una cuenta</label>
+                            <input class="form-control app-input"
+                                   id="shareUserSearch"
+                                   type="search"
+                                   placeholder="Nombre o email…"
+                                   autocomplete="off"
+                                   data-share-search>
+                            <div class="share-results" id="shareUserResults"></div>
+                            <div class="share-selected d-none" id="shareSelected"></div>
+
+                            <label class="ai-label mt-3" for="sharePermission">Permiso</label>
+                            <select class="form-select app-input settings-select"
+                                    id="sharePermission"
+                                    name="permission">
+                                <option value="view">Solo lectura</option>
+                                <option value="edit">Puede editar</option>
+                            </select>
+
+                            <button class="btn btn-app btn-app-primary w-100 mt-3" type="submit">
+                                <i class="bi bi-person-plus"></i>
+                                Compartir con esta cuenta
+                            </button>
+                        </form>
+
+                        <div class="share-link-row">
+                            <span class="share-link-text">
+                                <i class="bi bi-link-45deg"></i>
+                                Enlace de la nota
+                            </span>
+                            <button class="btn btn-app btn-app-ghost btn-app-sm"
+                                    type="button"
+                                    data-copy-link>
+                                <i class="bi bi-clipboard"></i> Copiar
+                            </button>
+                        </div>
+
+                        <div class="app-section-label share-people-label">Personas con acceso</div>
+                        <div class="share-people">
+                            <div class="share-person">
+                                <span class="avatar avatar-sm">{{ note.user.name[:1]|upper }}</span>
+                                <div class="share-person-info">
+                                    <b>{{ note.user.name }}</b>
+                                    <span>{{ note.user.email }} · propietario</span>
+                                </div>
+                                <span class="chip chip-ok">Propietario</span>
+                            </div>
+
+                            {% for collab in note.collabs|sort(attribute='user.name') %}
+                                <div class="share-person">
+                                    <span class="avatar avatar-sm">{{ collab.user.name[:1]|upper }}</span>
+                                    <div class="share-person-info">
+                                        <b>{{ collab.user.name }}</b>
+                                        <span>{{ collab.user.email }}</span>
+                                    </div>
+                                    <form class="share-permission-form"
+                                          method="post"
+                                          action="{{ url_for('notes.share_note', note_id=note.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="next" value="{{ request.path }}">
+                                        <input type="hidden" name="user_id" value="{{ collab.user.id }}">
+                                        <select class="form-select app-input settings-select"
+                                                name="permission"
+                                                aria-label="Permiso de {{ collab.user.name }}">
+                                            <option value="view" {% if collab.permission == 'view' %}selected{% endif %}>Solo lectura</option>
+                                            <option value="edit" {% if collab.permission == 'edit' %}selected{% endif %}>Puede editar</option>
+                                        </select>
+                                        <button class="btn btn-app btn-app-ghost btn-app-sm" type="submit">
+                                            Guardar
+                                        </button>
+                                    </form>
+                                    <form method="post"
+                                          action="{{ url_for('notes.unshare_note', note_id=note.id, user_id=collab.user.id) }}"
+                                          data-confirm="¿Quitar el acceso de {{ collab.user.name }}?">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="next" value="{{ request.path }}">
+                                        <button class="btn btn-app btn-app-danger btn-app-sm" type="submit">
+                                            Quitar
+                                        </button>
+                                    </form>
+                                </div>
+                            {% else %}
+                                <div class="app-hint">Todavía no compartiste esta nota con nadie.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}

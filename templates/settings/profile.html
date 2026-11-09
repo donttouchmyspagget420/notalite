@@ -44,11 +44,10 @@
                                value="{{ current_user.email }}"
                                required>
                         <label class="settings-label mt-2" for="profileAvatar">URL del avatar</label>
-                        <input class="form-control"
+                        <input class="form-control app-input"
                                id="profileAvatar"
                                name="avatar"
-                               type="file"
-                               accept="image/*"
+                               type="url"
                                value="{{ current_user.avatar or '' }}"
                                placeholder="https://…">
                         <button class="btn btn-app btn-app-primary mt-3" type="submit">Guardar cambios</button>

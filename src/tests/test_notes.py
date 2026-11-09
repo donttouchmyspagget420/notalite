@@ -2,7 +2,7 @@ import io
 
 from src.extensions import db
 from src.models import Directory, Note
-from tests.base import BaseTestCase
+from src.tests.base import BaseTestCase
 
 
 class NotesTestCase(BaseTestCase):
@@ -24,14 +24,12 @@ class NotesTestCase(BaseTestCase):
 
         self.assertIn("Sin carpeta", html)
 
-    def test_delete_last_folder_leaves_no_folders(self):
+    def test_delete_last_folder_deletes_its_notes(self):
         response = self.client.post(f"/notes/folders/{self.folder.id}/delete")
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Directory.query.filter_by(user_id=self.user.id).count(), 0)
-
-        note = db.session.get(Note, self.note.id)
-        self.assertIsNone(note.directory_id)
+        self.assertIsNone(db.session.get(Note, self.note.id))
 
     def test_folders_redirects_to_list_without_folders(self):
         self.client.post(f"/notes/folders/{self.folder.id}/delete")
@@ -84,17 +82,29 @@ class NotesTestCase(BaseTestCase):
         note = db.session.get(Note, self.note.id)
         self.assertEqual(note.directory_id, self.folder.id)
 
-    def test_delete_folder_promotes_children(self):
+    def test_delete_folder_deletes_children_and_notes(self):
         child = Directory(name="Child", user_id=self.user.id, parent_id=self.folder.id)
         db.session.add(child)
         db.session.commit()
+
+        child_note = Note(
+            title="Child note",
+            name="child-note.md",
+            content="Child",
+            user_id=self.user.id,
+            directory_id=child.id,
+        )
+        db.session.add(child_note)
+        db.session.commit()
+
         child_id = child.id
+        child_note_id = child_note.id
 
         self.client.post(f"/notes/folders/{self.folder.id}/delete")
 
-        child = db.session.get(Directory, child_id)
-        self.assertIsNotNone(child)
-        self.assertIsNone(child.parent_id)
+        self.assertIsNone(db.session.get(Directory, child_id))
+        self.assertIsNone(db.session.get(Note, self.note.id))
+        self.assertIsNone(db.session.get(Note, child_note_id))
 
     def test_import_without_folder(self):
         response = self.client.post(

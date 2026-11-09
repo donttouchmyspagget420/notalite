@@ -89,6 +89,12 @@
                 <span>Buscar</span>
                 <span class="count">⌘K</span>
             </a>
+            <a class="app-navitem {{ 'active' if current_nav == 'shared' }}"
+               href="{{ url_for('notes.shared_notes') }}">
+                <i class="bi bi-share"></i>
+                <span>Compartidas</span>
+                <span class="count">{{ shared_count|default(0) }}</span>
+            </a>
             {% if folders_visible %}
                 <div class="app-section-label">Carpetas</div>
                 {% for root in directory_roots|default([]) %}
