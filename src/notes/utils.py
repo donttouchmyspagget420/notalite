@@ -1,15 +1,16 @@
+import html
 import io
 import re
 import unicodedata
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from flask import abort, redirect, request, send_file, url_for
 from flask_login import current_user
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
-from src.enums import NoteLength, TimeUnit
+from src.enums import NoteLength, SearchLimit, TimeUnit, TrashRetention
 from src.extensions import db
-from src.models import Collab, Directory, Note, Tag, note_tags
+from src.models import Collab, Directory, Note, Tag, note_tags, utcnow
 from src.notes.exporters import build_pdf
 
 
@@ -36,6 +37,78 @@ def time_ago(value):
 
     days = seconds // TimeUnit.DAY
     return f"hace {days} d"
+
+
+def ensure_utc(value):
+    if value and value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+
+    return value
+
+
+def highlight_text(value, query):
+    """Escape a text and wrap every case-insensitive match in ``<mark>``."""
+    escaped = html.escape(value or "")
+
+    if not query:
+        return escaped
+
+    pattern = re.compile(re.escape(html.escape(query)), re.IGNORECASE)
+    return pattern.sub(lambda match: f"<mark>{match.group(0)}</mark>", escaped)
+
+
+def search_snippet(content, query):
+    """Return a short, safe excerpt around the first match."""
+    text = re.sub(r"\s+", " ", content or "").strip()
+
+    if not text:
+        return ""
+
+    limit = int(SearchLimit.SNIPPET)
+    match = re.search(re.escape(query), text, re.IGNORECASE) if query else None
+
+    if match:
+        start = max(0, match.start() - limit // 3)
+        end = min(len(text), start + limit)
+        start = max(0, end - limit)
+    else:
+        start = 0
+        end = min(len(text), limit)
+
+    snippet = text[start:end]
+    prefix = "…" if start > 0 else ""
+    suffix = "…" if end < len(text) else ""
+
+    return f"{prefix}{highlight_text(snippet, query)}{suffix}"
+
+
+def note_thumbnail(note):
+    """Return the first image URL embedded in a note, if any."""
+    content = note.content or ""
+
+    patterns = (
+        r"!\[[^\]]*\]\(\s*((?:https?://|/)[^)\s]+)",
+        r"<img[^>]+src=[\"']((?:https?://|/)[^\"']+)[\"']",
+    )
+
+    for pattern in patterns:
+        match = re.search(pattern, content, re.IGNORECASE)
+
+        if match:
+            return match.group(1)
+
+    return None
+
+
+def trash_days_left(note):
+    deleted_at = ensure_utc(note.deleted_at)
+
+    if not deleted_at:
+        return TrashRetention.DAYS
+
+    elapsed = max(0, (utcnow() - deleted_at).total_seconds())
+    remaining = TrashRetention.DAYS - int(elapsed // TimeUnit.DAY)
+    return max(0, remaining)
 
 
 def slugify(value, fallback="nota"):
@@ -68,6 +141,68 @@ def shared_with_me():
         .filter(Collab.user_id == current_user.id, Note.to_delete == False)
         .order_by(Note.modified_at.desc())
     )
+
+
+def searchable_notes():
+    shared_ids = db.session.query(Collab.note_id).filter(
+        Collab.user_id == current_user.id
+    )
+
+    return Note.query.filter(
+        Note.to_delete == False,
+        or_(Note.user_id == current_user.id, Note.id.in_(shared_ids)),
+    )
+
+
+def search_notes(query, field="all"):
+    query = (query or "").strip()
+
+    if not query:
+        return []
+
+    pattern = f"%{query}%"
+    notes = searchable_notes()
+
+    if field == "title":
+        notes = notes.filter(Note.title.ilike(pattern))
+    elif field == "content":
+        notes = notes.filter(Note.content.ilike(pattern))
+    elif field == "tag":
+        notes = notes.filter(Note.tags.any(Tag.nombre.ilike(pattern)))
+    else:
+        notes = notes.filter(
+            or_(
+                Note.title.ilike(pattern),
+                Note.content.ilike(pattern),
+                Note.tags.any(Tag.nombre.ilike(pattern)),
+            )
+        )
+
+    return notes.order_by(Note.modified_at.desc()).limit(SearchLimit.RESULTS).all()
+
+
+def trash_notes():
+    return (
+        Note.query.filter(Note.user_id == current_user.id, Note.to_delete == True)
+        .order_by(Note.deleted_at.desc())
+    )
+
+
+def purge_expired_trash():
+    cutoff = utcnow() - timedelta(days=TrashRetention.DAYS)
+    expired = [
+        note
+        for note in trash_notes().all()
+        if note.deleted_at and ensure_utc(note.deleted_at) <= cutoff
+    ]
+
+    for note in expired:
+        db.session.delete(note)
+
+    if expired:
+        db.session.commit()
+
+    return len(expired)
 
 
 def user_tags():
@@ -212,6 +347,9 @@ def sidebar_data():
         Note.user_id == current_user.id, Note.to_delete == False
     ).count()
     shared_count = shared_with_me().count()
+    trash_count = Note.query.filter(
+        Note.user_id == current_user.id, Note.to_delete == True
+    ).count()
 
     name_parts = (current_user.name or "").split()
     initials = "".join(part[0] for part in name_parts[:2]).upper()
@@ -226,6 +364,7 @@ def sidebar_data():
         "sidebar_tags": [(tag, tag_counts.get(tag.id, 0)) for tag in tags],
         "total_notes": total_notes,
         "shared_count": shared_count,
+        "trash_count": trash_count,
         "user_initials": initials,
     }
 

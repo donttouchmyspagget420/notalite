@@ -253,6 +253,17 @@
 
   const appShell = qs(".app-shell");
 
+  if (appShell && appShell.dataset.searchUrl) {
+    document.addEventListener("keydown", function (event) {
+      const shortcut = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k";
+
+      if (!shortcut) return;
+
+      event.preventDefault();
+      window.location.href = appShell.dataset.searchUrl;
+    });
+  }
+
   qsa("[data-folder-action]").forEach(function (button) {
     button.addEventListener("click", function () {
       const row = button.closest("[data-folder-row]");

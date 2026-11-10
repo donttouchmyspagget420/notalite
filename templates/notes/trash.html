@@ -1,0 +1,80 @@
+{% extends "layouts/app.html" %}
+{% from "components/note_row.html" import note_row %}
+
+{% set active_nav = 'trash' %}
+{% set avatar_classes = ['a1', 'a2', 'a3', 'a4', 'a5'] %}
+
+{% block title %}NotaLite - Papelera{% endblock %}
+
+{% block app_content %}
+    <div class="app-mainbar">
+        <span class="app-mainbar-title">Papelera</span>
+        <span class="app-mainbar-sub">{{ notes|length }} elemento{{ '' if notes|length == 1 else 's' }}</span>
+
+        {% if notes %}
+            <form class="ms-auto"
+                  method="post"
+                  action="{{ url_for('notes.empty_trash') }}"
+                  data-confirm="¿Vaciar la papelera? Las notas se eliminarán definitivamente.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <button class="btn btn-app btn-app-danger" type="submit">
+                    <i class="bi bi-trash3"></i>
+                    Vaciar papelera
+                </button>
+            </form>
+        {% endif %}
+    </div>
+
+    <div class="app-content">
+        <div class="text-body-secondary small bg-body-tertiary border rounded-3 mt-3 p-2">
+            Las notas se eliminan <b class="text-body">permanentemente</b> a los 30 días.
+        </div>
+
+        {% if notes %}
+            <div class="note-list mt-3">
+                {% for note in notes %}
+                    {% set days_left = note|trashdays %}
+                    {% call note_row(
+                        note.title,
+                        'Eliminada ' ~ (note.deleted_at|timeago) ~ ' · se borrará en ' ~ days_left ~ ' día' ~ ('' if days_left == 1 else 's'),
+                        avatar=note.title[:1]|upper,
+                        avatar_class=avatar_classes[note.id % 5],
+                        avatar_src=note|notethumb,
+                        time=note.deleted_at|timeago,
+                        href=url_for('notes.edit_note', note_id=note.id),
+                        title_class='text-decoration-line-through text-secondary'
+                    ) %}
+                        <form method="post"
+                              action="{{ url_for('notes.restore_note', note_id=note.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button class="btn btn-app btn-app-ghost btn-app-sm"
+                                    type="submit">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                                Restaurar
+                            </button>
+                        </form>
+                        <form method="post"
+                              action="{{ url_for('notes.destroy_note', note_id=note.id) }}"
+                              data-confirm="¿Eliminar la nota «{{ note.title }}» definitivamente?">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button class="btn btn-app btn-app-ghost btn-app-sm btn-app-danger"
+                                    type="submit">
+                                <i class="bi bi-trash3"></i>
+                                Eliminar
+                            </button>
+                        </form>
+                    {% endcall %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="app-empty-hint">
+                <i class="bi bi-trash3"></i>
+                <b>La papelera está vacía</b>
+                <span>Las notas que elimines aparecerán acá durante 30 días.</span>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -1,17 +1,26 @@
-{# Reusable note row. Extra actions can be passed with a {% call %} block. #}
+{# Reusable row shared by notes and folders. Extra actions use a {% call %} block. #}
 {% macro note_row(title,
     meta,
     avatar=None,
     avatar_class='a1',
+    avatar_src=None,
     dot=None,
     tag=None,
     status=None,
     time=None,
     folder_icon=false,
     note_icon=false,
-    href='#') %}
-    <div class="note-row">
-        {% if avatar %}
+    href='#',
+    row_class='',
+    title_class='',
+    truncate_meta=true) %}
+    <div class="note-row {{ row_class }}">
+        {% if avatar_src %}
+            <img class="avatar {{ avatar_class }}"
+                 src="{{ avatar_src }}"
+                 alt=""
+                 loading="lazy">
+        {% elif avatar %}
             <span class="avatar {{ avatar_class }}">{{ avatar }}</span>
         {% elif dot %}
             <span class="tag-dot {{ dot }}"></span>
@@ -22,8 +31,8 @@
         {% endif %}
 
         <div class="note-row-body">
-            <a class="note-title d-block text-truncate" href="{{ href }}">{{ title }}</a>
-            <span class="note-meta d-block text-truncate">{{ meta|safe }}</span>
+            <a class="note-title d-block text-truncate {{ title_class }}" href="{{ href }}">{{ title }}</a>
+            <span class="note-meta d-block {{ 'text-truncate' if truncate_meta }}">{{ meta|safe }}</span>
         </div>
 
         {% if tag %}<span class="chip chip-tag">{{ tag }}</span>{% endif %}
@@ -31,4 +40,15 @@
         {% if time %}<span class="note-time">{{ time }}</span>{% endif %}
         {% if caller is defined %}{{ caller() }}{% endif %}
     </div>
+{% endmacro %}
+
+{% macro folder_row(name, meta, href='#', row_class='', title_class='') %}
+    {{ note_row(
+        name,
+        meta,
+        folder_icon=true,
+        href=href,
+        row_class=row_class,
+        title_class=title_class
+    ) }}
 {% endmacro %}

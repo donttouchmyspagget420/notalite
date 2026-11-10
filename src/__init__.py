@@ -34,6 +34,7 @@ def create_app(config_object=Config):
     def load_user(user_id):
         return db.session.get(User, int(user_id))
 
+    from src.admin import bp as admin_bp
     from src.auth import bp as auth_bp
     from src.main import bp as main_bp
     from src.notes import bp as notes_bp
@@ -43,6 +44,7 @@ def create_app(config_object=Config):
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(notes_bp, url_prefix="/notes")
     app.register_blueprint(settings_bp, url_prefix="/settings")
+    app.register_blueprint(admin_bp, url_prefix="/admin")
 
     from src import cli
 

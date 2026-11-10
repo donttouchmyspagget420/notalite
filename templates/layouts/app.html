@@ -9,7 +9,8 @@
          data-create-folder-url="{{ url_for('notes.create_folder') }}"
          data-rename-folder-url="{{ url_for('notes.rename_folder', directory_id=0) }}"
          data-delete-folder-url="{{ url_for('notes.delete_folder', directory_id=0) }}"
-         data-move-note-url="{{ url_for('notes.move_note', note_id=0) }}">
+         data-move-note-url="{{ url_for('notes.move_note', note_id=0) }}"
+         data-search-url="{{ url_for('notes.search') }}">
         {% include "components/app_sidebar.html" %}
 
         <div class="app-main">

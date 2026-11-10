@@ -51,6 +51,10 @@ class User(db.Model,UserMixin):
         "Tag", back_populates="user", cascade="all, delete-orphan"
     )
 
+    @property
+    def is_admin(self):
+        return bool(self.role and (self.role.name or "").strip().lower() == "admin")
+
 class Pending(db.Model):
     __tablename__ = 'pendings'
 

@@ -1,3 +1,5 @@
+{% from "components/note_row.html" import note_row %}
+
 {% macro folder_tree(node, notes_by_directory, active_id=none, open_all=false) %}
     {% set node_notes = notes_by_directory.get(node.id, []) %}
     {% set children = node.children|sort(attribute='name') %}
@@ -12,12 +14,15 @@
         </summary>
         <div class="folder-tree-body">
             {% for note in node_notes %}
-                <a class="folder-tree-note"
-                   href="{{ url_for('notes.edit_note', note_id=note.id) }}">
-                    <i class="bi bi-file-earmark-text"></i>
-                    <span>{{ note.title }}</span>
-                    <span class="folder-tree-note-time">{{ note.modified_at|timeago }}</span>
-                </a>
+                {{ note_row(
+                    note.title,
+                    note.name,
+                    avatar_src=note|notethumb,
+                    note_icon=true,
+                    time=note.modified_at|timeago,
+                    href=url_for('notes.edit_note', note_id=note.id),
+                    row_class='mt-1'
+                ) }}
             {% endfor %}
 
             {% for child in children %}

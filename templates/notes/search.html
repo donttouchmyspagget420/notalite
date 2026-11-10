@@ -1,0 +1,99 @@
+{% extends "layouts/app.html" %}
+{% from "components/note_row.html" import note_row %}
+
+{% set active_nav = 'search' %}
+{% set avatar_classes = ['a1', 'a2', 'a3', 'a4', 'a5'] %}
+{% set filters = [
+    ('all', 'Todo'),
+    ('title', 'Título'),
+    ('content', 'Contenido'),
+    ('tag', 'Etiquetas')
+] %}
+
+{% block title %}NotaLite - Buscar{% endblock %}
+
+{% block app_content %}
+    <div class="app-mainbar py-2">
+        <form class="search-form"
+              method="get"
+              action="{{ url_for('notes.search') }}">
+            <i class="bi bi-search search-form-icon"></i>
+            <input class="app-input search-input"
+                   type="search"
+                   name="q"
+                   value="{{ query }}"
+                   placeholder="Buscar en título, contenido y etiquetas…"
+                   aria-label="Buscar notas"
+                   autofocus>
+            <input type="hidden" name="field" value="{{ field }}">
+        </form>
+    </div>
+
+    <div class="app-content">
+        <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+            <span class="text-secondary small">Filtros:</span>
+            {% for key, label in filters %}
+                <a class="chip search-filter text-decoration-none {{ 'is-active' if field == key }}"
+                   href="{{ url_for('notes.search', q=query, field=key) }}">{{ label }}</a>
+            {% endfor %}
+            {% if query %}
+                <span class="text-secondary small ms-auto">
+                    {{ results|length }} resultado{{ '' if results|length == 1 else 's' }} · {{ elapsed_ms }} ms
+                </span>
+            {% endif %}
+        </div>
+
+        {% if results %}
+            <div class="note-list">
+                {% for result in results %}
+                    {% set note = result.note %}
+                    {% call note_row(
+                        result.title|safe,
+                        result.snippet|safe,
+                        avatar=note.title[:1]|upper,
+                        avatar_class=avatar_classes[note.id % 5],
+                        avatar_src=note|notethumb,
+                        time=note.modified_at|timeago,
+                        href=url_for('notes.edit_note', note_id=note.id),
+                        truncate_meta=false
+                    ) %}
+                        {% if note.directory %}
+                            <a class="chip"
+                               href="{{ url_for('notes.folders', directory_id=note.directory.id) }}">
+                                <i class="bi bi-folder2"></i> {{ note.directory.name }}
+                            </a>
+                        {% else %}
+                            <span class="chip">
+                                <i class="bi bi-folder2"></i> Sin carpeta
+                            </span>
+                        {% endif %}
+                        {% if note.user_id != current_user.id %}
+                            <span class="chip chip-warn">
+                                <i class="bi bi-person"></i> de {{ note.user.name }}
+                            </span>
+                        {% endif %}
+                        {% for tag in note.tags %}
+                            <a class="chip chip-tag"
+                               href="{{ url_for('notes.tags', tag_id=tag.id) }}">
+                                <span class="tag-dot" style="--tag-color: {{ tag.color }}"></span>
+                                #{{ tag.nombre }}
+                            </a>
+                        {% endfor %}
+                    {% endcall %}
+                {% endfor %}
+            </div>
+        {% elif query %}
+            <div class="app-empty-hint">
+                <i class="bi bi-search"></i>
+                <b>No encontramos resultados</b>
+                <span>Probá con otras palabras o cambiá el filtro.</span>
+            </div>
+        {% else %}
+            <div class="app-empty-hint">
+                <i class="bi bi-search"></i>
+                <b>Buscá en tus notas</b>
+                <span>La búsqueda cubre títulos, contenido y etiquetas.</span>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -35,9 +35,12 @@ NotaLite/
     │   └── routes.py       //ruta /
     ├── notes/
     │   ├── __init__.py     //blueprint notes
-    │   ├── routes.py       //notas, carpetas, etiquetas y compartir
-    │   ├── utils.py        //helpers de acceso y barra lateral
+    │   ├── routes.py       //notas, carpetas, etiquetas, buscador y papelera
+    │   ├── utils.py        //helpers de acceso, busqueda y barra lateral
     │   └── exporters.py    //exportacion a Markdown y PDF
+    ├── admin/
+    │   ├── __init__.py     //blueprint admin
+    │   └── routes.py       //usuarios y metricas (solo administradores)
     ├── services/
     │   ├── forms.py        //formularios y validacion WTForms
     │   ├── gemini.py       //asistente de IA para el editor
@@ -137,6 +140,30 @@ Opcionalmente podés definir `AWS_S3_PREFIX`, `AWS_S3_PUBLIC_URL`,
 El botón «Compartir» del editor permite buscar una cuenta por nombre o email,
 elegir el permiso (solo lectura o edición) y administrar quién tiene acceso.
 Las notas compartidas aparecen en «Compartidas» dentro de la barra lateral.
+
+## Buscar notas
+
+El buscador de la barra lateral (o `Ctrl/Cmd + K`) recorre títulos, contenido y
+etiquetas. Permite filtrar por campo y muestra un fragmento resaltado de cada
+resultado. También incluye las notas que otras personas compartieron con vos.
+
+## Papelera
+
+Al eliminar una nota se mueve a la papelera, donde se puede restaurar o borrar
+definitivamente. Las notas se eliminan solas a los 30 días. La papelera muestra
+cuántos días le quedan a cada nota y permite vaciarla por completo.
+
+## Administración
+
+Las cuentas con rol `Admin` ven la sección «Usuarios y métricas» en la barra
+lateral. Allí pueden consultar usuarios, actividad semanal, espacio utilizado y
+las cuentas creadas recientemente. El panel es de solo lectura.
+
+## Miniaturas en las listas
+
+Si una nota contiene una imagen en su Markdown o HTML, la primera imagen se usa
+como miniatura en las listas de Inicio, Carpetas, Etiquetas, Compartidas,
+Buscador y Papelera. Si no tiene imágenes se muestra la inicial del título.
 
 ## Tests
 

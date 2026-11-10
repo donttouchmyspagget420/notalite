@@ -1,5 +1,5 @@
 {% extends "layouts/app.html" %}
-{% from "components/note_row.html" import note_row %}
+{% from "components/note_row.html" import folder_row, note_row %}
 {% set active_nav = "home" %}
 {% block title %}NotaLite - {{ active_directory.name }}{% endblock %}
 
@@ -57,10 +57,9 @@
                 <div class="app-section-label">Subcarpetas</div>
                 <div class="note-list">
                     {% for folder in subfolders %}
-                        {{ note_row(
+                        {{ folder_row(
                             folder.name,
                             directory_note_counts.get(folder.id, 0) ~ ' notas · ' ~ (folder.children|length) ~ ' subcarpetas',
-                            folder_icon=true,
                             href=url_for('notes.folders', directory_id=folder.id)
                         ) }}
                     {% endfor %}
@@ -75,6 +74,7 @@
                         {% call note_row(
                             note.title,
                             note.name ~ ' · ' ~ (note.modified_at|timeago),
+                            avatar_src=note|notethumb,
                             note_icon=true,
                             time=note.modified_at|timeago,
                             href=url_for('notes.edit_note', note_id=note.id)

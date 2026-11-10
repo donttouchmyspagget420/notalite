@@ -1,3 +1,5 @@
+import time
+
 from flask import (
     abort,
     flash,
@@ -33,21 +35,30 @@ from src.notes.utils import (
     directory_or_none,
     export_response,
     grouped_notes_by_directory,
+    highlight_text,
     note_for_access,
     note_or_404,
     note_owner_or_404,
+    note_thumbnail,
     note_title_from_markdown,
+    purge_expired_trash,
     safe_next,
+    search_notes,
+    search_snippet,
     shared_with_me,
     sidebar_data,
     slugify,
     tag_or_404,
     time_ago,
+    trash_days_left,
+    trash_notes,
     user_tags,
 )
 
 
 bp.add_app_template_filter(time_ago, "timeago")
+bp.add_app_template_filter(note_thumbnail, "notethumb")
+bp.add_app_template_filter(trash_days_left, "trashdays")
 
 
 @bp.route("/list")
@@ -55,6 +66,38 @@ bp.add_app_template_filter(time_ago, "timeago")
 def list_notes():
     notes = active_notes().order_by(Note.modified_at.desc()).all()
     return render_template("notes/list.html", notes=notes, **sidebar_data())
+
+
+@bp.route("/search")
+@login_required
+def search():
+    query = (request.args.get("q") or "").strip()
+    field = (request.args.get("field") or "all").strip().lower()
+
+    if field not in {"all", "title", "content", "tag"}:
+        field = "all"
+
+    started = time.perf_counter()
+    notes = search_notes(query, field)
+    elapsed_ms = max(0, round((time.perf_counter() - started) * 1000))
+
+    results = [
+        {
+            "note": note,
+            "title": highlight_text(note.title, query),
+            "snippet": search_snippet(note.content, query),
+        }
+        for note in notes
+    ]
+
+    return render_template(
+        "notes/search.html",
+        results=results,
+        query=query,
+        field=field,
+        elapsed_ms=elapsed_ms,
+        **sidebar_data(),
+    )
 
 
 @bp.route("/shared")
@@ -286,6 +329,67 @@ def delete_note(note_id):
 
     flash("Nota movida a la papelera.", "success")
     return safe_next("notes.list_notes")
+
+
+@bp.route("/trash")
+@login_required
+def trash():
+    purged = purge_expired_trash()
+    notes = trash_notes().all()
+
+    if purged:
+        flash(f"{purged} nota(s) expirada(s) se eliminaron definitivamente.", "info")
+
+    return render_template("notes/trash.html", notes=notes, **sidebar_data())
+
+
+@bp.route("/<int:note_id>/restore", methods=["POST"])
+@login_required
+def restore_note(note_id):
+    note = note_owner_or_404(note_id)
+
+    if not note.to_delete:
+        abort(404)
+
+    note.to_delete = False
+    note.deleted_at = None
+    note.modified_at = utcnow()
+    db.session.commit()
+
+    flash("Nota restaurada.", "success")
+    return safe_next("notes.trash")
+
+
+@bp.route("/<int:note_id>/destroy", methods=["POST"])
+@login_required
+def destroy_note(note_id):
+    note = note_owner_or_404(note_id)
+
+    if not note.to_delete:
+        abort(404)
+
+    db.session.delete(note)
+    db.session.commit()
+
+    flash("Nota eliminada definitivamente.", "success")
+    return safe_next("notes.trash")
+
+
+@bp.route("/trash/empty", methods=["POST"])
+@login_required
+def empty_trash():
+    notes = trash_notes().all()
+
+    for note in notes:
+        db.session.delete(note)
+
+    db.session.commit()
+
+    flash(
+        f"Papelera vaciada. {len(notes)} nota(s) eliminada(s) definitivamente.",
+        "success",
+    )
+    return safe_next("notes.trash")
 
 
 @bp.route("/<int:note_id>/export/<string:export_format>")

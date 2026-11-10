@@ -71,6 +71,7 @@
                         note.title,
                         (note.directory.name if note.directory else 'Sin carpeta') ~ ' · ' ~ (note.modified_at|timeago),
                         dot='blue',
+                        avatar_src=note|notethumb,
                         href=url_for('notes.edit_note', note_id=note.id)
                     ) %}
                         {% for tag in note.tags %}
@@ -100,8 +101,8 @@
             </div>
         {% endif %}
 
-        <div class="app-hint app-hint-box">
-            <b>Nota:</b> eliminar una etiqueta la quita de todas las notas.
+        <div class="text-body-secondary small bg-body-tertiary border rounded-3 mt-3 p-2">
+            <b class="text-body">Nota:</b> eliminar una etiqueta la quita de todas las notas.
         </div>
     </div>
 {% endblock %}

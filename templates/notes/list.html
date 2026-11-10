@@ -67,6 +67,7 @@
                         note.directory.name if note.directory else 'Sin carpeta',
                         avatar=note.title[:1]|upper,
                         avatar_class=avatar_classes[note.id % 5],
+                        avatar_src=note|notethumb,
                         time=note.modified_at|timeago,
                         href=url_for('notes.edit_note', note_id=note.id)
                     ) %}
@@ -77,6 +78,17 @@
                                 #{{ tag.nombre }}
                             </a>
                         {% endfor %}
+                        <form method="post"
+                              action="{{ url_for('notes.delete_note', note_id=note.id) }}"
+                              data-confirm="¿Mover la nota «{{ note.title }}» a la papelera?">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button class="btn btn-app btn-app-ghost btn-app-sm btn-app-danger"
+                                    type="submit"
+                                    aria-label="Mover {{ note.title }} a la papelera">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </form>
                     {% endcall %}
                 {% endfor %}
             </div>

@@ -1,0 +1,97 @@
+{% extends "layouts/app.html" %}
+
+{% set active_nav = 'admin' %}
+
+{% block title %}NotaLite - Administración{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block app_content %}
+    <div class="app-mainbar">
+        <span class="app-mainbar-title">Administración</span>
+        <span class="app-mainbar-sub">Usuarios y métricas de uso</span>
+
+        <form class="ms-auto admin-search"
+              method="get"
+              action="{{ url_for('admin.dashboard') }}">
+            <i class="bi bi-search"></i>
+            <input class="app-input admin-search-input"
+                   type="search"
+                   name="q"
+                   value="{{ query }}"
+                   placeholder="Buscar usuario…"
+                   aria-label="Buscar usuario">
+        </form>
+    </div>
+
+    <div class="app-content">
+        <div class="admin-stats">
+            {% for stat in stats %}
+                <div class="admin-stat">
+                    <div class="admin-stat-label">{{ stat.label }}</div>
+                    <div class="admin-stat-value">{{ stat.value }}</div>
+                    <div class="admin-stat-detail">{{ stat.detail }}</div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="admin-grid">
+            <section class="admin-card">
+                <b class="admin-card-title">Notas creadas por semana</b>
+                <div class="admin-bars" aria-label="Notas creadas en las últimas 8 semanas">
+                    {% for bar in activity %}
+                        <i style="height: {{ bar.height }}%"
+                           title="{{ bar.label }}: {{ bar.count }} nota(s)"></i>
+                    {% endfor %}
+                </div>
+                <div class="admin-bars-labels">
+                    {% for bar in activity %}
+                        <span>{{ bar.label }}</span>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="admin-card admin-card-wide">
+                <b class="admin-card-title">
+                    {% if query %}Usuarios que coinciden con «{{ query }}»{% else %}Usuarios recientes{% endif %}
+                </b>
+
+                <div class="admin-table" role="table">
+                    <div class="admin-table-row admin-table-head" role="row">
+                        <span role="columnheader">Nombre</span>
+                        <span role="columnheader">Email</span>
+                        <span role="columnheader">Rol</span>
+                        <span role="columnheader">Notas</span>
+                        <span role="columnheader">Alta</span>
+                    </div>
+                    {% for user in users %}
+                        <div class="admin-table-row" role="row">
+                            <span role="cell" class="admin-user">
+                                <img class="avatar avatar-sm"
+                                     src="{{ user.avatar or url_for('static', filename='imgs/logo.png') }}"
+                                     alt=""
+                                     referrerpolicy="no-referrer">
+                                <b>{{ user.name }}</b>
+                            </span>
+                            <span role="cell" class="admin-muted">{{ user.email }}</span>
+                            <span role="cell">
+                                <span class="chip">{{ user.role.name if user.role else 'Sin rol' }}</span>
+                            </span>
+                            <span role="cell">{{ note_counts.get(user.id, 0) }}</span>
+                            <span role="cell" class="admin-muted">
+                                {{ user.timestamp|timeago if user.timestamp else '—' }}
+                            </span>
+                        </div>
+                    {% else %}
+                        <div class="admin-table-empty">
+                            No hay usuarios que coincidan con la búsqueda.
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
