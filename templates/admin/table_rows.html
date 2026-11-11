@@ -1,0 +1,124 @@
+{% extends "layouts/app.html" %}
+
+{% set active_nav = 'admin' %}
+
+{% block title %}NotaLite - {{ table_label }}{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block app_content %}
+    <div class="app-mainbar">
+        <span class="app-mainbar-title">{{ table_label }}</span>
+        <span class="app-mainbar-sub">
+            <code>{{ table.name }}</code> · {{ total }} fila{{ '' if total == 1 else 's' }}
+        </span>
+
+        <form class="ms-auto admin-search"
+              method="get"
+              action="{{ url_for('admin.table_rows', table_name=table.name) }}">
+            <i class="bi bi-search"></i>
+            <input class="app-input admin-search-input"
+                   type="search"
+                   name="q"
+                   value="{{ query }}"
+                   placeholder="Buscar en la tabla…"
+                   aria-label="Buscar en la tabla">
+        </form>
+
+        <a class="btn btn-app"
+           href="{{ url_for('admin.tables') }}">
+            <i class="bi bi-arrow-left"></i>
+            Tablas
+        </a>
+        <a class="btn btn-app btn-app-primary"
+           href="{{ url_for('admin.table_row_new', table_name=table.name) }}">
+            <i class="bi bi-plus-lg"></i>
+            Nueva fila
+        </a>
+    </div>
+
+    <div class="app-content">
+        <section class="admin-card">
+            <div class="table-responsive admin-table-wrap">
+                <table class="table table-sm align-middle admin-db-table">
+                    <thead>
+                        <tr>
+                            {% for column in columns %}
+                                <th scope="col">{{ column.label }}</th>
+                            {% endfor %}
+                            <th scope="col" class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in rows %}
+                            <tr>
+                                {% for cell in row.cells %}
+                                    <td>
+                                        {% if cell.avatar %}
+                                            <img class="avatar avatar-sm"
+                                                 src="{{ cell.raw or url_for('static', filename='imgs/logo.png') }}"
+                                                 alt="Avatar"
+                                                 referrerpolicy="no-referrer">
+                                        {% else %}
+                                            {{ cell.value }}
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                                <td>
+                                    <div class="admin-actions justify-content-end">
+                                        {% if can_edit %}
+                                            <a class="btn btn-app btn-app-ghost btn-app-sm"
+                                               href="{{ url_for('admin.table_row_edit', table_name=table.name, row_key=row.key) }}">
+                                                <i class="bi bi-pencil"></i>
+                                                Editar
+                                            </a>
+                                        {% endif %}
+                                        <form method="post"
+                                              action="{{ url_for('admin.table_row_delete', table_name=table.name, row_key=row.key) }}"
+                                              data-confirm="¿Eliminar esta fila de {{ table.name }}?">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button class="btn btn-app btn-app-ghost btn-app-sm btn-app-danger"
+                                                    type="submit">
+                                                <i class="bi bi-trash3"></i>
+                                                Eliminar
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="{{ columns|length + 1 }}" class="admin-muted">
+                                    No hay filas que coincidan con la búsqueda.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if pages > 1 %}
+                <nav class="admin-pagination" aria-label="Paginación de la tabla">
+                    {% if page > 1 %}
+                        <a class="btn btn-app btn-app-ghost btn-app-sm"
+                           href="{{ url_for('admin.table_rows', table_name=table.name, q=query, page=page - 1) }}">
+                            <i class="bi bi-chevron-left"></i>
+                            Anterior
+                        </a>
+                    {% endif %}
+                    <span class="admin-muted">Página {{ page }} de {{ pages }}</span>
+                    {% if page < pages %}
+                        <a class="btn btn-app btn-app-ghost btn-app-sm"
+                           href="{{ url_for('admin.table_rows', table_name=table.name, q=query, page=page + 1) }}">
+                            Siguiente
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    {% endif %}
+                </nav>
+            {% endif %}
+        </section>
+    </div>
+{% endblock %}

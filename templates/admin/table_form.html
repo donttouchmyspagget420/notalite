@@ -1,0 +1,132 @@
+{% extends "layouts/app.html" %}
+
+{% set active_nav = 'admin' %}
+
+{% block title %}
+    NotaLite - {{ 'Nueva fila' if creating else 'Editar fila' }} en {{ table_label }}
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block app_content %}
+    <div class="app-mainbar">
+        <span class="app-mainbar-title">
+            {{ 'Nueva fila' if creating else 'Editar fila' }}
+        </span>
+        <span class="app-mainbar-sub">
+            {{ table_label }} · <code>{{ table.name }}</code>
+        </span>
+        <a class="btn btn-app ms-auto"
+           href="{{ url_for('admin.table_rows', table_name=table.name) }}">
+            <i class="bi bi-arrow-left"></i>
+            Volver a la tabla
+        </a>
+    </div>
+
+    <div class="app-content">
+        <section class="admin-card admin-form">
+            {% if errors %}
+                <div class="alert alert-warning" role="alert">
+                    {% for error in errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post"
+                  enctype="multipart/form-data"
+                  action="{{ url_for('admin.table_row_new', table_name=table.name) if creating else url_for('admin.table_row_edit', table_name=table.name, row_key=row_key) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                {% for field in fields %}
+                    <div class="mb-3">
+                        <label class="form-label form-label-sm text-uppercase fw-semibold"
+                               for="field-{{ field.name }}">
+                            {{ field.label }}
+                            {% if field.readonly %}<span class="admin-muted">(clave)</span>{% endif %}
+                        </label>
+
+                        {% if field.readonly %}
+                            <input class="form-control app-input"
+                                   id="field-{{ field.name }}"
+                                   type="text"
+                                   value="{{ field.value }}"
+                                   disabled>
+                        {% elif field.type == 'checkbox' %}
+                            <div class="form-check">
+                                <input class="form-check-input"
+                                       id="field-{{ field.name }}"
+                                       type="checkbox"
+                                       name="{{ field.name }}"
+                                       {% if field.checked %}checked{% endif %}>
+                                <label class="form-check-label admin-muted"
+                                       for="field-{{ field.name }}">
+                                    {{ field.label }}
+                                </label>
+                            </div>
+                        {% elif field.type == 'file' %}
+                            {% if field.value %}
+                                <div class="admin-avatar-preview">
+                                    <img class="avatar avatar-lg"
+                                         src="{{ field.value }}"
+                                         alt="Avatar actual"
+                                         referrerpolicy="no-referrer">
+                                </div>
+                            {% endif %}
+                            <input class="form-control app-input"
+                                   id="field-{{ field.name }}"
+                                   type="file"
+                                   name="{{ field.name }}"
+                                   accept="image/png,image/jpeg,image/gif,image/webp">
+                        {% elif field.type == 'textarea' %}
+                            <textarea class="form-control app-input"
+                                      id="field-{{ field.name }}"
+                                      name="{{ field.name }}"
+                                      rows="6">{{ field.value }}</textarea>
+                        {% elif field.type == 'select' %}
+                            <select class="form-select app-input"
+                                    id="field-{{ field.name }}"
+                                    name="{{ field.name }}">
+                                {% if field.nullable %}
+                                    <option value="">— Sin asignar —</option>
+                                {% endif %}
+                                {% for option in field.options %}
+                                    <option value="{{ option.value }}"
+                                            {% if option.value == field.value %}selected{% endif %}>
+                                        {{ option.label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        {% else %}
+                            <input class="form-control app-input"
+                                   id="field-{{ field.name }}"
+                                   type="{{ field.type }}"
+                                   name="{{ field.name }}"
+                                   value="{{ field.value }}"
+                                   {% if field.type == 'datetime-local' %}step="60"{% endif %}
+                                   {% if field.type == 'number' %}step="1"{% endif %}>
+                        {% endif %}
+
+                        {% if field.help %}
+                            <div class="form-text">{{ field.help }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a class="btn btn-app btn-app-ghost"
+                       href="{{ url_for('admin.table_rows', table_name=table.name) }}">
+                        Cancelar
+                    </a>
+                    <button class="btn btn-app btn-app-primary" type="submit">
+                        <i class="bi bi-check-lg"></i>
+                        {{ 'Crear fila' if creating else 'Guardar cambios' }}
+                    </button>
+                </div>
+            </form>
+        </section>
+    </div>
+{% endblock %}

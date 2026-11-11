@@ -28,19 +28,17 @@ def upload_root():
     return os.path.join(project_root, configured)
 
 
-def _extension(filename):
+def extension(filename):
     cleaned = secure_filename(filename or "")
-    extension = cleaned.rsplit(".", 1)[-1].lower() if "." in cleaned else ""
+    suffix = cleaned.rsplit(".", 1)[-1].lower() if "." in cleaned else ""
 
-    if extension not in IMAGE_EXTENSIONS:
-        raise StorageError(
-            "Formato no permitido. Usá PNG, JPG, GIF o WebP."
-        )
+    if suffix not in IMAGE_EXTENSIONS:
+        raise StorageError("Formato no permitido. Usá PNG, JPG, GIF o WebP.")
 
-    return extension
+    return suffix
 
 
-def _backend():
+def backend():
     configured = (current_app.config.get("STORAGE_BACKEND") or "").strip().lower()
 
     if configured in {"s3", "aws"}:
@@ -51,7 +49,7 @@ def _backend():
     return "s3" if current_app.config.get("AWS_S3_BUCKET") else "local"
 
 
-def _save_local(upload, key):
+def save_local(upload, key):
     destination = os.path.join(upload_root(), *key.split("/"))
     os.makedirs(os.path.dirname(destination), exist_ok=True)
     upload.save(destination)
@@ -59,7 +57,7 @@ def _save_local(upload, key):
     return url_for("notes.uploaded_image", filename=key)
 
 
-def _s3_client():
+def s3_client():
     try:
         import boto3
     except ImportError as error:
@@ -82,7 +80,7 @@ def _s3_client():
     return boto3.client("s3", **client_kwargs)
 
 
-def _save_s3(upload, key, extension):
+def save_s3(upload, key, file_extension):
     bucket = current_app.config.get("AWS_S3_BUCKET")
 
     if not bucket:
@@ -92,7 +90,9 @@ def _save_s3(upload, key, extension):
 
     prefix = (current_app.config.get("AWS_S3_PREFIX") or "").strip("/")
     object_key = f"{prefix}/{key}" if prefix else key
-    content_type = mimetypes.guess_type(f"image.{extension}")[0] or "application/octet-stream"
+    content_type = (
+        mimetypes.guess_type(f"image.{file_extension}")[0] or "application/octet-stream"
+    )
 
     extra_args = {"ContentType": content_type}
     acl = current_app.config.get("AWS_S3_ACL")
@@ -100,7 +100,7 @@ def _save_s3(upload, key, extension):
         extra_args["ACL"] = acl
 
     try:
-        _s3_client().upload_fileobj(
+        s3_client().upload_fileobj(
             upload.stream,
             bucket,
             object_key,
@@ -132,10 +132,10 @@ def save_image(upload, user_id):
     if not upload or not upload.filename:
         raise StorageError("Elegí una imagen para subir.")
 
-    extension = _extension(upload.filename)
-    key = f"notes/{user_id}/{uuid.uuid4().hex}.{extension}"
+    file_extension = extension(upload.filename)
+    key = f"notes/{user_id}/{uuid.uuid4().hex}.{file_extension}"
 
-    if _backend() == "s3":
-        return _save_s3(upload, key, extension)
+    if backend() == "s3":
+        return save_s3(upload, key, file_extension)
 
-    return _save_local(upload, key)
+    return save_local(upload, key)

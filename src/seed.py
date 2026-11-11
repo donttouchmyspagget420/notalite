@@ -16,7 +16,7 @@ def seed_database():
     db.create_all()
 
     print("Seeding Roles...")
-    roles_data = ['Admin', 'Editor', 'Viewer']
+    roles_data = ["Admin", "User"]
     roles = []
     for role_name in roles_data:
         role = Role(name=role_name)
@@ -34,7 +34,7 @@ def seed_database():
             email=fake.unique.email(),
             password=default_password_hash,
             avatar=fake.image_url(width=200, height=200),
-            role=random.choice(roles)
+            role=random.choice(roles),
         )
         db.session.add(user)
         users.append(user)
@@ -43,11 +43,7 @@ def seed_database():
     print("Seeding Directories...")
     directories = []
     for user in users:
-        root_dir = Directory(
-            name="Root",
-            user=user,
-            parent=None
-        )
+        root_dir = Directory(name="Root", user=user, parent=None)
         db.session.add(root_dir)
         directories.append(root_dir)
 
@@ -55,7 +51,7 @@ def seed_database():
             sub_dir = Directory(
                 name=fake.word().capitalize(),
                 user=user,
-                parent=random.choice([root_dir, None])
+                parent=random.choice([root_dir, None]),
             )
             db.session.add(sub_dir)
             directories.append(sub_dir)
@@ -65,21 +61,29 @@ def seed_database():
     notes = []
     for user in users:
         user_dirs = [d for d in directories if d.user == user]
-        
+
         for _ in range(random.randint(3, 6)):
-            created_dt = fake.date_time_between(start_date="-1y", end_date="now", tzinfo=timezone.utc)
+            created_dt = fake.date_time_between(
+                start_date="-1y", end_date="now", tzinfo=timezone.utc
+            )
             is_deleted = fake.boolean(chance_of_getting_true=15)
 
             note = Note(
-                title=fake.sentence(nb_words=4).rstrip('.'),
+                title=fake.sentence(nb_words=4).rstrip("."),
                 name=f"{fake.word().lower()}.md",
                 content=fake.paragraph(nb_sentences=5),
                 created_at=created_dt,
                 modified_at=created_dt,
-                deleted_at=fake.date_time_between(start_date=created_dt, end_date="now", tzinfo=timezone.utc) if is_deleted else None,
+                deleted_at=(
+                    fake.date_time_between(
+                        start_date=created_dt, end_date="now", tzinfo=timezone.utc
+                    )
+                    if is_deleted
+                    else None
+                ),
                 to_delete=is_deleted,
                 user=user,
-                directory=random.choice(user_dirs)
+                directory=random.choice(user_dirs),
             )
             db.session.add(note)
             notes.append(note)
@@ -90,16 +94,14 @@ def seed_database():
     for note in notes:
         potential_collaborators = [u for u in users if u != note.user]
         num_collabs = random.randint(0, min(2, len(potential_collaborators)))
-        
+
         selected_users = random.sample(potential_collaborators, num_collabs)
         for col_user in selected_users:
             pair = (col_user, note)
             if pair not in existing_collabs:
                 existing_collabs.add(pair)
                 collab = Collab(
-                    permission=random.choice(["view", "edit"]),
-                    user=col_user,
-                    note=note
+                    permission=random.choice(["view", "edit"]), user=col_user, note=note
                 )
                 db.session.add(collab)
     db.session.commit()
@@ -109,11 +111,7 @@ def seed_database():
     tags = []
     for user in users:
         for name in tag_names:
-            tag = Tag(
-                nombre=name,
-                color=fake.hex_color(),
-                user=user
-            )
+            tag = Tag(nombre=name, color=fake.hex_color(), user=user)
             db.session.add(tag)
             tags.append(tag)
     db.session.commit()

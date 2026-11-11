@@ -121,6 +121,87 @@ class NotesTestCase(BaseTestCase):
         self.assertIsNone(note.directory_id)
         self.assertEqual(note.title, "Imported")
 
+    def test_import_preserves_unicode_filename(self):
+        response = self.client.post(
+            "/notes/import",
+            data={
+                "directory_id": "",
+                "files": [
+                    (io.BytesIO(b"# Acentos\n\nBody"), "nota-ñandú.md"),
+                    (io.BytesIO("# Japonés\n\nBody".encode("utf-8")), "日本語.md"),
+                ],
+            },
+            content_type="multipart/form-data",
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIsNotNone(
+            Note.query.filter_by(user_id=self.user.id, name="nota-ñandú.md").first()
+        )
+        japanese = Note.query.filter_by(
+            user_id=self.user.id, name="日本語.md"
+        ).first()
+        self.assertIsNotNone(japanese)
+        self.assertEqual(japanese.title, "Japonés")
+
+    def test_import_multiple_files_into_folder(self):
+        response = self.client.post(
+            "/notes/import",
+            data={
+                "directory_id": str(self.folder.id),
+                "files": [
+                    (io.BytesIO(b"# One\n\nBody"), "one.md"),
+                    (io.BytesIO(b"# Two\n\nBody"), "two.md"),
+                ],
+            },
+            content_type="multipart/form-data",
+        )
+
+        self.assertEqual(response.status_code, 302)
+        notes = Note.query.filter(
+            Note.user_id == self.user.id, Note.name.in_(["one.md", "two.md"])
+        ).all()
+        self.assertEqual(len(notes), 2)
+        self.assertTrue(all(note.directory_id == self.folder.id for note in notes))
+
+    def test_import_skips_non_markdown_files(self):
+        self.client.post(
+            "/notes/import",
+            data={
+                "directory_id": "",
+                "files": (io.BytesIO(b"plain text"), "note.txt"),
+            },
+            content_type="multipart/form-data",
+        )
+
+        self.assertIsNone(
+            Note.query.filter_by(user_id=self.user.id, name="note.txt").first()
+        )
+
+    def test_import_skips_duplicate_filename(self):
+        payload = {
+            "directory_id": "",
+            "files": (io.BytesIO(b"# Duplicate\n\nBody"), "duplicate.md"),
+        }
+        self.client.post(
+            "/notes/import", data=payload, content_type="multipart/form-data"
+        )
+        self.client.post(
+            "/notes/import",
+            data={
+                "directory_id": "",
+                "files": (io.BytesIO(b"# Duplicate 2\n\nBody"), "duplicate.md"),
+            },
+            content_type="multipart/form-data",
+        )
+
+        self.assertEqual(
+            Note.query.filter_by(
+                user_id=self.user.id, name="duplicate.md"
+            ).count(),
+            1,
+        )
+
     def test_export_markdown(self):
         response = self.client.get(f"/notes/{self.note.id}/export/md")
 

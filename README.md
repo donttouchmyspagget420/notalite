@@ -40,7 +40,7 @@ NotaLite/
     │   └── exporters.py    //exportacion a Markdown y PDF
     ├── admin/
     │   ├── __init__.py     //blueprint admin
-    │   └── routes.py       //usuarios y metricas (solo administradores)
+    │   └── routes.py       //métricas, usuarios y tablas (solo administradores)
     ├── services/
     │   ├── forms.py        //formularios y validacion WTForms
     │   ├── gemini.py       //asistente de IA para el editor
@@ -155,9 +155,19 @@ cuántos días le quedan a cada nota y permite vaciarla por completo.
 
 ## Administración
 
-Las cuentas con rol `Admin` ven la sección «Usuarios y métricas» en la barra
-lateral. Allí pueden consultar usuarios, actividad semanal, espacio utilizado y
-las cuentas creadas recientemente. El panel es de solo lectura.
+Las cuentas con rol `Admin` ven la sección «Administración» en la barra
+lateral, con dos vistas independientes:
+
+- **Métricas** (`/admin/`): resumen de uso con usuarios totales y activos,
+  notas activas y en papelera, carpetas, etiquetas, colaboraciones,
+  almacenamiento, actividad semanal, usuarios por rol y etiquetas más usadas.
+- **Tablas** (`/admin/tables`): explorador genérico de la base de datos. Permite
+  listar, buscar, paginar, crear, editar y eliminar filas de cualquier tabla del
+  modelo (incluidas las tablas de relación como `note_tags`), con soporte para
+  claves foráneas, booleanos, fechas, enums y contraseñas (que se hashean al
+  guardarlas). La gestión de usuarios se hace desde la tabla `users`: el avatar
+  se muestra como imagen y se puede reemplazar subiendo un archivo (PNG, JPG,
+  GIF o WebP) igual que en el perfil.
 
 ## Miniaturas en las listas
 

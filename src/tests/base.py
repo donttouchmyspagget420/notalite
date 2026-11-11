@@ -1,4 +1,5 @@
 import os
+import shutil
 import tempfile
 import unittest
 
@@ -14,12 +15,14 @@ class BaseTestCase(unittest.TestCase):
     def setUp(self):
         file_descriptor, self.db_path = tempfile.mkstemp(suffix=".db")
         os.close(file_descriptor)
+        self.upload_path = tempfile.mkdtemp()
 
         class TestConfig(Config):
             TESTING = True
             SECRET_KEY = "test-secret"
             WTF_CSRF_ENABLED = False
             SQLALCHEMY_DATABASE_URI = "sqlite:///" + self.db_path
+            UPLOAD_FOLDER = self.upload_path
             GOOGLE_LLM_API_KEY = "test-key"
             GOOGLE_LLM_MODEL = "gemini-test"
 
@@ -67,6 +70,7 @@ class BaseTestCase(unittest.TestCase):
         db.engine.dispose()
         self.ctx.pop()
         os.unlink(self.db_path)
+        shutil.rmtree(self.upload_path, ignore_errors=True)
 
     def login(self, user, client=None):
         client = client or self.client

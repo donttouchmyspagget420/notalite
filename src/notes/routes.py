@@ -12,7 +12,6 @@ from flask import (
 )
 from flask_login import current_user, login_required
 from sqlalchemy import func, or_
-from werkzeug.utils import secure_filename
 
 from src.enums import ImportLimit, NoteLength
 from src.extensions import db
@@ -36,6 +35,7 @@ from src.notes.utils import (
     export_response,
     grouped_notes_by_directory,
     highlight_text,
+    markdown_filename,
     note_for_access,
     note_or_404,
     note_owner_or_404,
@@ -738,9 +738,9 @@ def import_notes():
     skipped = 0
 
     for file in files[:ImportLimit.FILES]:
-        filename = secure_filename(file.filename)
+        filename = markdown_filename(file.filename)
 
-        if not filename.lower().endswith(".md"):
+        if not filename:
             skipped += 1
             continue
 
@@ -750,7 +750,7 @@ def import_notes():
             skipped += 1
             continue
 
-        content = raw.decode("utf-8", errors="replace")
+        content = raw.decode("utf-8-sig", errors="replace")
         exists = Note.query.filter_by(
             user_id=current_user.id,
             name=filename,

@@ -111,6 +111,18 @@ def trash_days_left(note):
     return max(0, remaining)
 
 
+def markdown_filename(filename, max_length=NoteLength.NAME):
+    """Return a safe ``.md`` file name while preserving Unicode characters."""
+    name = (filename or "").replace("\\", "/").rsplit("/", 1)[-1]
+    name = "".join(char for char in name if char.isprintable()).strip()
+
+    if not name.lower().endswith(".md"):
+        return ""
+
+    stem = name[:-3].strip() or "nota"
+    return f"{stem[:max_length - 3]}.md"
+
+
 def slugify(value, fallback="nota"):
     value = unicodedata.normalize("NFKD", value or "")
     value = value.encode("ascii", "ignore").decode("ascii")
@@ -120,7 +132,7 @@ def slugify(value, fallback="nota"):
 
 
 def note_title_from_markdown(filename, content):
-    for line in (content or "").splitlines():
+    for line in (content or "").lstrip("\ufeff").splitlines():
         line = line.strip()
         if line.startswith("#"):
             title = line.lstrip("#").strip()

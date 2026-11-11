@@ -2,7 +2,7 @@
 
 {% set active_nav = 'admin' %}
 
-{% block title %}NotaLite - Administración{% endblock %}
+{% block title %}NotaLite - Métricas{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet"
@@ -11,20 +11,8 @@
 
 {% block app_content %}
     <div class="app-mainbar">
-        <span class="app-mainbar-title">Administración</span>
-        <span class="app-mainbar-sub">Usuarios y métricas de uso</span>
-
-        <form class="ms-auto admin-search"
-              method="get"
-              action="{{ url_for('admin.dashboard') }}">
-            <i class="bi bi-search"></i>
-            <input class="app-input admin-search-input"
-                   type="search"
-                   name="q"
-                   value="{{ query }}"
-                   placeholder="Buscar usuario…"
-                   aria-label="Buscar usuario">
-        </form>
+        <span class="app-mainbar-title">Métricas</span>
+        <span class="app-mainbar-sub">Resumen de uso de NotaLite</span>
     </div>
 
     <div class="app-content">
@@ -39,7 +27,7 @@
         </div>
 
         <div class="admin-grid">
-            <section class="admin-card">
+            <section class="admin-card admin-card-wide">
                 <b class="admin-card-title">Notas creadas por semana</b>
                 <div class="admin-bars" aria-label="Notas creadas en las últimas 8 semanas">
                     {% for bar in activity %}
@@ -54,44 +42,39 @@
                 </div>
             </section>
 
-            <section class="admin-card admin-card-wide">
-                <b class="admin-card-title">
-                    {% if query %}Usuarios que coinciden con «{{ query }}»{% else %}Usuarios recientes{% endif %}
-                </b>
-
-                <div class="admin-table" role="table">
-                    <div class="admin-table-row admin-table-head" role="row">
-                        <span role="columnheader">Nombre</span>
-                        <span role="columnheader">Email</span>
-                        <span role="columnheader">Rol</span>
-                        <span role="columnheader">Notas</span>
-                        <span role="columnheader">Alta</span>
-                    </div>
-                    {% for user in users %}
-                        <div class="admin-table-row" role="row">
-                            <span role="cell" class="admin-user">
-                                <img class="avatar avatar-sm"
-                                     src="{{ user.avatar or url_for('static', filename='imgs/logo.png') }}"
-                                     alt=""
-                                     referrerpolicy="no-referrer">
-                                <b>{{ user.name }}</b>
+            <section class="admin-card">
+                <b class="admin-card-title">Usuarios por rol</b>
+                <div class="admin-metric-list">
+                    {% for role in role_distribution %}
+                        <div class="admin-metric-row">
+                            <span class="admin-metric-label">{{ role.label }}</span>
+                            <span class="admin-metric-track">
+                                <i style="width: {{ role.width }}%"></i>
                             </span>
-                            <span role="cell" class="admin-muted">{{ user.email }}</span>
-                            <span role="cell">
-                                <span class="chip">{{ user.role.name if user.role else 'Sin rol' }}</span>
-                            </span>
-                            <span role="cell">{{ note_counts.get(user.id, 0) }}</span>
-                            <span role="cell" class="admin-muted">
-                                {{ user.timestamp|timeago if user.timestamp else '—' }}
-                            </span>
+                            <b>{{ role.count }}</b>
                         </div>
                     {% else %}
-                        <div class="admin-table-empty">
-                            No hay usuarios que coincidan con la búsqueda.
-                        </div>
+                        <span class="admin-muted">Todavía no hay roles.</span>
                     {% endfor %}
                 </div>
             </section>
         </div>
+
+        <section class="admin-card admin-card-full">
+            <b class="admin-card-title">Etiquetas más usadas</b>
+            <div class="admin-metric-list">
+                {% for tag in top_tags %}
+                    <div class="admin-metric-row">
+                        <span class="admin-metric-label">#{{ tag.label }}</span>
+                        <span class="admin-metric-track">
+                            <i style="width: {{ tag.width }}%"></i>
+                        </span>
+                        <b>{{ tag.count }}</b>
+                    </div>
+                {% else %}
+                    <span class="admin-muted">Todavía no hay etiquetas asignadas.</span>
+                {% endfor %}
+            </div>
+        </section>
     </div>
 {% endblock %}

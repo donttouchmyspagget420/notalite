@@ -24,11 +24,11 @@ from src.enums import NoteLength, UploadLimit
 from src.services.storage import IMAGE_EXTENSIONS
 
 
-def _strip(value):
+def strip(value):
     return value.strip() if isinstance(value, str) else value
 
 
-def _first_error(form):
+def first_error(form):
     """Return the first validation error message for flashing."""
     for errors in form.errors.values():
         if errors:
@@ -64,7 +64,7 @@ class MaxFileSize:
 class LoginForm(FlaskForm):
     email = StringField(
         "Email",
-        filters=[_strip],
+        filters=[strip],
         validators=[DataRequired("El email es obligatorio."), Email("Ingresá un email válido.")],
     )
     password = PasswordField(
@@ -76,7 +76,7 @@ class LoginForm(FlaskForm):
 class SignupForm(FlaskForm):
     name = StringField(
         "Nombre",
-        filters=[_strip],
+        filters=[strip],
         validators=[
             DataRequired("El nombre es obligatorio."),
             Length(max=NoteLength.NAME, message="El nombre es demasiado largo."),
@@ -84,7 +84,7 @@ class SignupForm(FlaskForm):
     )
     surname = StringField(
         "Apellido",
-        filters=[_strip],
+        filters=[strip],
         validators=[
             DataRequired("El apellido es obligatorio."),
             Length(max=NoteLength.NAME, message="El apellido es demasiado largo."),
@@ -92,7 +92,7 @@ class SignupForm(FlaskForm):
     )
     email = StringField(
         "Email",
-        filters=[_strip],
+        filters=[strip],
         validators=[
             DataRequired("El email es obligatorio."),
             Email("Ingresá un email válido."),
@@ -118,7 +118,7 @@ class SignupForm(FlaskForm):
 class VerificationForm(FlaskForm):
     code_form = StringField(
         "Código",
-        filters=[_strip],
+        filters=[strip],
         validators=[
             DataRequired("El código es obligatorio."),
             Regexp(r"^\d{6}$", message="El código debe tener 6 dígitos."),
@@ -129,7 +129,7 @@ class VerificationForm(FlaskForm):
 class ProfileForm(FlaskForm):
     name = StringField(
         "Nombre",
-        filters=[_strip],
+        filters=[strip],
         validators=[
             DataRequired("El nombre es obligatorio."),
             Length(max=NoteLength.NAME, message="El nombre es demasiado largo."),
@@ -137,7 +137,7 @@ class ProfileForm(FlaskForm):
     )
     email = StringField(
         "Email",
-        filters=[_strip],
+        filters=[strip],
         validators=[
             DataRequired("El email es obligatorio."),
             Email("Ingresá un email válido."),
@@ -146,7 +146,7 @@ class ProfileForm(FlaskForm):
     )
     avatar = StringField(
         "URL del avatar",
-        filters=[_strip],
+        filters=[strip],
         validators=[Optional(), Length(max=NoteLength.TITLE)],
     )
 
@@ -179,7 +179,7 @@ class ThemeForm(FlaskForm):
 class FolderForm(FlaskForm):
     name = StringField(
         "Nombre",
-        filters=[_strip],
+        filters=[strip],
         validators=[
             DataRequired("El nombre de la carpeta es obligatorio."),
             Length(max=NoteLength.NAME, message="El nombre es demasiado largo."),
@@ -191,7 +191,7 @@ class FolderForm(FlaskForm):
 class TagForm(FlaskForm):
     name = StringField(
         "Nombre",
-        filters=[_strip],
+        filters=[strip],
         validators=[
             DataRequired("El nombre de la etiqueta es obligatorio."),
             Length(max=NoteLength.NAME, message="El nombre es demasiado largo."),
@@ -206,7 +206,7 @@ class MoveNoteForm(FlaskForm):
 class ShareNoteForm(FlaskForm):
     user_id = StringField(
         "Usuario",
-        filters=[_strip],
+        filters=[strip],
         validators=[DataRequired("Elegí una cuenta para compartir.")],
     )
     permission = SelectField(
@@ -231,11 +231,11 @@ class ImageUploadForm(FlaskForm):
     )
     alt = StringField(
         "Descripción",
-        filters=[_strip],
+        filters=[strip],
         validators=[Optional(), Length(max=255)],
     )
 
 
 def form_error(form):
     """Public helper used by routes to flash a single readable error."""
-    return _first_error(form)
+    return first_error(form)
